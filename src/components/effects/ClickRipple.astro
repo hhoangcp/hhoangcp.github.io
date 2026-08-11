@@ -3,24 +3,27 @@
 ---
 
 <script>
-  if (matchMedia('(pointer: fine)').matches) {
-    window.addEventListener('pointerdown', (e) => {
-      const r = document.createElement('div');
-      r.className = 'fx-ripple';
-      r.style.left = e.clientX + 'px';
-      r.style.top = e.clientY + 'px';
-      r.style.width = '6px';
-      r.style.height = '6px';
-      r.style.opacity = '0.55';
-      r.style.transition =
-        'width .5s ease, height .5s ease, opacity .5s ease, border-color .5s ease';
-      document.body.appendChild(r);
-      requestAnimationFrame(() => {
-        r.style.width = '90px';
-        r.style.height = '90px';
-        r.style.opacity = '0';
+  if (!(window as any).__cr) {
+    (window as any).__cr = true;
+    if (matchMedia('(pointer: fine)').matches) {
+      window.addEventListener('pointerdown', (e) => {
+        const r = document.createElement('div');
+        r.className = 'fx-ripple';
+        r.style.left = e.clientX + 'px';
+        r.style.top = e.clientY + 'px';
+        r.style.width = '6px';
+        r.style.height = '6px';
+        r.style.opacity = '0.55';
+        r.style.transition =
+          'width .5s ease, height .5s ease, opacity .5s ease, border-color .5s ease';
+        document.body.appendChild(r);
+        requestAnimationFrame(() => {
+          r.style.width = '90px';
+          r.style.height = '90px';
+          r.style.opacity = '0';
+        });
+        setTimeout(() => r.remove(), 520);
       });
-      setTimeout(() => r.remove(), 520);
-    });
+    }
   }
 </script>

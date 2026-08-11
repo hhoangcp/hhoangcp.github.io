@@ -1,10 +1,11 @@
 ---
 import 'katex/dist/katex.min.css';
 import '../styles/global.css';
+import { ClientRouter } from 'astro:transitions';
 import { SITE } from '../consts';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import Sakura from '../components/effects/Sakura.astro';
+import Snow from '../components/effects/Snow.astro';
 import CursorTrail from '../components/effects/CursorTrail.astro';
 import ClickRipple from '../components/effects/ClickRipple.astro';
 
@@ -36,19 +37,29 @@ const ogImage = image ? new URL(image, Astro.site).href : undefined;
     <meta property="og:url" content={canonical} />
     <meta name="twitter:card" content="summary" />
     {ogImage && <meta property="og:image" content={ogImage} />}
+    <ClientRouter />
     <script is:inline>
       (function () {
-        try {
-          var t = localStorage.getItem('theme') || 'light';
-          document.documentElement.setAttribute('data-theme', t);
-        } catch (e) {}
+        function apply(doc) {
+          try {
+            var t = localStorage.getItem('theme') || 'light';
+            (doc || document).documentElement.setAttribute('data-theme', t);
+          } catch (e) {}
+        }
+        apply();
+        if (!window.__themeSwap) {
+          window.__themeSwap = true;
+          document.addEventListener('astro:before-swap', function (ev) {
+            apply(ev.newDocument);
+          });
+        }
       })();
     </script>
   </head>
   <body>
-    <div class="bg-image" aria-hidden="true"></div>
-    <div class="bg-overlay" aria-hidden="true"></div>
-    <Sakura />
+    <div class="bg-image" aria-hidden="true" transition:persist></div>
+    <div class="bg-overlay" aria-hidden="true" transition:persist></div>
+    <Snow />
     <Header />
     <main>
       <slot />
@@ -86,40 +97,46 @@ const ogImage = image ? new URL(image, Astro.site).href : undefined;
         plaintext: 'Text',
         text: 'Text',
       };
-      document.querySelectorAll('pre.astro-code').forEach((pre) => {
-        if (pre.dataset.cb) return;
-        pre.dataset.cb = '1';
-        const lang = pre.getAttribute('data-language') || '';
-        const label = map[lang] || (lang ? lang.toUpperCase() : 'Code');
-        const wrap = document.createElement('div');
-        wrap.className = 'code-block';
-        const header = document.createElement('div');
-        header.className = 'code-header';
-        const span = document.createElement('span');
-        span.className = 'code-lang';
-        span.textContent = label;
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'code-copy';
-        btn.setAttribute('aria-label', 'Sao chép mã');
-        btn.textContent = 'Copy';
-        btn.addEventListener('click', async () => {
-          const code = pre.querySelector('code')?.innerText ?? '';
-          try {
-            await navigator.clipboard.writeText(code);
-            btn.textContent = 'Đã chép ✓';
-            setTimeout(() => (btn.textContent = 'Copy'), 1500);
-          } catch {
-            btn.textContent = 'Lỗi';
-            setTimeout(() => (btn.textContent = 'Copy'), 1500);
-          }
+      function wrapCode() {
+        document.querySelectorAll('pre.astro-code').forEach((pre) => {
+          if (pre.dataset.cb) return;
+          pre.dataset.cb = '1';
+          const lang = pre.getAttribute('data-language') || '';
+          const label = map[lang] || (lang ? lang.toUpperCase() : 'Code');
+          const wrap = document.createElement('div');
+          wrap.className = 'code-block';
+          const header = document.createElement('div');
+          header.className = 'code-header';
+          const span = document.createElement('span');
+          span.className = 'code-lang';
+          span.textContent = label;
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'code-copy';
+          btn.setAttribute('aria-label', 'Sao chép mã');
+          btn.textContent = 'Copy';
+          btn.addEventListener('click', async () => {
+            const code = pre.querySelector('code')?.innerText ?? '';
+            try {
+              await navigator.clipboard.writeText(code);
+              btn.textContent = 'Đã chép ✓';
+              setTimeout(() => (btn.textContent = 'Copy'), 1500);
+            } catch {
+              btn.textContent = 'Lỗi';
+              setTimeout(() => (btn.textContent = 'Copy'), 1500);
+            }
+          });
+          header.appendChild(span);
+          header.appendChild(btn);
+          pre.parentNode?.insertBefore(wrap, pre);
+          wrap.appendChild(header);
+          wrap.appendChild(pre);
         });
-        header.appendChild(span);
-        header.appendChild(btn);
-        pre.parentNode?.insertBefore(wrap, pre);
-        wrap.appendChild(header);
-        wrap.appendChild(pre);
-      });
+      }
+      if (!(window as any).__cbInit) {
+        (window as any).__cbInit = true;
+        document.addEventListener('astro:page-load', wrapCode);
+      }
     </script>
   </body>
 </html>

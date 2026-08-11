@@ -1,16 +1,28 @@
 ---
+import { Icon } from 'astro-icon/components';
 import { SITE, SOCIAL } from '../consts';
 const year = new Date().getFullYear();
+const iconMap: Record<string, string> = {
+  github: 'mdi:github',
+  facebook: 'mdi:facebook',
+  mail: 'mdi:email',
+};
 ---
 
 <footer class="site-footer">
   <div class="container footer-inner">
-    <div>© {year} {SITE.author} · Built with Astro</div>
+    <div class="footer-copy">© {year} {SITE.author} · Built with Astro</div>
     <div class="footer-links">
       {
         SOCIAL.map((s) => (
-          <a href={s.href} target="_blank" rel="noopener noreferrer">
-            {s.label}
+          <a
+            class="footer-link"
+            href={s.href}
+            aria-label={s.label}
+            target={s.href.startsWith('http') ? '_blank' : undefined}
+            rel={s.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+          >
+            <Icon name={iconMap[s.icon]} />
           </a>
         ))
       }

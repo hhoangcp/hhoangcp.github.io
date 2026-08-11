@@ -28,15 +28,3 @@ export function getAllTags(posts: CollectionEntry<'posts'>[]): [string, number][
   for (const p of posts) for (const t of p.data.tags) map.set(t, (map.get(t) ?? 0) + 1);
   return [...map.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
 }
-
-export function groupByYear(
-  posts: CollectionEntry<'posts'>[]
-): [string, CollectionEntry<'posts'>[]][] {
-  const map = new Map<string, CollectionEntry<'posts'>[]>();
-  for (const p of posts) {
-    const y = String(p.data.date.getFullYear());
-    if (!map.has(y)) map.set(y, []);
-    map.get(y)!.push(p);
-  }
-  return [...map.entries()].sort((a, b) => Number(b[0]) - Number(a[0]));
-}

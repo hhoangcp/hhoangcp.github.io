@@ -2,6 +2,7 @@
 import type { GetStaticPaths } from 'astro';
 import Base from '../../layouts/Base.astro';
 import PostCard from '../../components/PostCard.astro';
+import Back from '../../components/Back.astro';
 import { getAllPosts, capitalize } from '../../utils';
 
 export const getStaticPaths = (async () => {
@@ -23,6 +24,7 @@ const { tag, posts } = Astro.props;
 <Base title={`Thẻ: ${capitalize(tag)}`} description={`Bài viết gắn thẻ ${capitalize(tag)}.`}>
   <div class="container">
     <div class="page-wrap">
+      <Back href="/tags/" />
       <h1 class="page-title">{capitalize(tag)}</h1>
       <p class="page-sub">{posts.length} bài viết</p>
       <div class="post-list">

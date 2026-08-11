@@ -1,0 +1,45 @@
+---
+import type { GetStaticPaths } from 'astro';
+import Base from '../../../layouts/Base.astro';
+import PostCard from '../../../components/PostCard.astro';
+import Pagination from '../../../components/Pagination.astro';
+import Back from '../../../components/Back.astro';
+import { getAllPosts } from '../../../utils';
+import { SITE } from '../../../consts';
+
+export const getStaticPaths = (async () => {
+  const PAGE_SIZE = SITE.postsPerPage;
+  const all = await getAllPosts();
+  const lastPage = Math.max(1, Math.ceil(all.length / PAGE_SIZE));
+  const paths = [];
+  for (let n = 2; n <= lastPage; n++) {
+    paths.push({
+      params: { page: String(n) },
+      props: {
+        page: n,
+        posts: all.slice((n - 1) * PAGE_SIZE, n * PAGE_SIZE),
+        total: all.length,
+        lastPage,
+      },
+    });
+  }
+  return paths;
+}) satisfies GetStaticPaths;
+
+const { page, posts, total, lastPage } = Astro.props;
+const pageHref = (n: number) => (n === 1 ? '/posts/' : `/posts/page/${n}/`);
+---
+
+<Base title={`Bài viết — trang ${page}`} description="Tất cả bài viết.">
+  <div class="container">
+    <div class="page-wrap">
+      <Back href="/posts/" />
+      <h1 class="page-title">Bài viết</h1>
+      <p class="page-sub">{total} bài viết</p>
+      <div class="post-list">
+        {posts.map((post) => <PostCard post={post} />)}
+      </div>
+      <Pagination page={page} lastPage={lastPage} pageHref={pageHref} />
+    </div>
+  </div>
+</Base>

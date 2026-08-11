@@ -1,0 +1,98 @@
+---
+import Base from '../../layouts/Base.astro';
+import Back from '../../components/Back.astro';
+import { getAllPosts } from '../../utils';
+
+const posts = await getAllPosts();
+const index = posts.map((p) => ({
+  title: p.data.title,
+  description: p.data.description ?? '',
+  tags: p.data.tags,
+  url: `/posts/${p.id}/`,
+  date: p.data.date.toISOString(),
+}));
+---
+
+<Base title="Tìm kiếm" description="Tìm bài viết theo tiêu đề, mô tả, thẻ.">
+  <div class="container">
+    <div class="page-wrap">
+      <Back href="/" />
+      <h1 class="page-title">Tìm kiếm</h1>
+      <div class="search-box">
+        <input
+          id="search-input"
+          type="search"
+          placeholder="Tìm theo tiêu đề, mô tả, thẻ…"
+          autocomplete="off"
+        />
+      </div>
+      <div id="search-results" class="search-results"></div>
+    </div>
+  </div>
+  <script type="application/json" id="search-data" set:html={JSON.stringify(index)} />
+</Base>
+
+<script>
+  function initSearch() {
+    const dataEl = document.getElementById('search-data');
+    const input = document.getElementById('search-input') as HTMLInputElement | null;
+    const results = document.getElementById('search-results');
+    if (!dataEl || !input || !results) return;
+    const index = JSON.parse(dataEl.textContent || '[]');
+    function escapeHtml(s: string) {
+      return String(s).replace(
+        /[&<>"']/g,
+        (c) =>
+          ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;',
+          })[c]
+      );
+    }
+    function render(list: typeof index) {
+      if (!list.length) {
+        results.innerHTML = '<p class="search-empty">Không tìm thấy bài viết phù hợp.</p>';
+        return;
+      }
+      results.innerHTML = list
+        .map(
+          (p) =>
+            `<a class="search-item" href="${p.url}">
+              <span class="search-item-title">${escapeHtml(p.title)}</span>
+              <span class="search-item-meta">${new Date(p.date).toLocaleDateString('vi-VN')}${
+                p.tags.length ? ' · ' + p.tags.map(escapeHtml).join(', ') : ''
+              }</span>
+              ${p.description ? `<span class="search-item-desc">${escapeHtml(p.description)}</span>` : ''}
+            </a>`
+        )
+        .join('');
+    }
+    function search(q: string) {
+      const query = q.trim().toLowerCase();
+      if (!query) {
+        results.innerHTML = '<p class="search-hint">Nhập từ khoá để tìm bài viết.</p>';
+        return;
+      }
+      render(
+        index.filter(
+          (p) =>
+            p.title.toLowerCase().includes(query) ||
+            p.description.toLowerCase().includes(query) ||
+            p.tags.some((t) => t.toLowerCase().includes(query))
+        )
+      );
+    }
+    const q = new URLSearchParams(location.search).get('q') || '';
+    input.value = q;
+    input.oninput = () => search(input.value);
+    search(q);
+  }
+  initSearch();
+  if (!(window as any).__searchInit) {
+    (window as any).__searchInit = true;
+    document.addEventListener('astro:page-load', initSearch);
+  }
+</script>

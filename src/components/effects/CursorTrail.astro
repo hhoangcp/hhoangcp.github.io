@@ -3,33 +3,36 @@
 ---
 
 <script>
-  if (
-    matchMedia('(pointer: fine)').matches &&
-    matchMedia('(prefers-reduced-motion: no-preference)').matches
-  ) {
-    const dots: HTMLElement[] = [];
-    const MAX = 16;
-    let last = 0;
-    window.addEventListener(
-      'pointermove',
-      (e) => {
-        const now = performance.now();
-        if (now - last < 16) return;
-        last = now;
-        const d = document.createElement('div');
-        d.style.cssText = `position:fixed;left:${e.clientX}px;top:${e.clientY}px;width:7px;height:7px;border-radius:50%;background:var(--accent);pointer-events:none;z-index:9999;transform:translate(-50%,-50%);opacity:0.55;transition:opacity .6s ease,transform .6s ease;`;
-        document.body.appendChild(d);
-        dots.push(d);
-        requestAnimationFrame(() => {
-          d.style.opacity = '0';
-          d.style.transform = 'translate(-50%,-50%) scale(0.2)';
-        });
-        if (dots.length > MAX) {
-          const old = dots.shift();
-          if (old) setTimeout(() => old.remove(), 600);
-        }
-      },
-      { passive: true }
-    );
+  if (!(window as any).__ct) {
+    (window as any).__ct = true;
+    if (
+      matchMedia('(pointer: fine)').matches &&
+      matchMedia('(prefers-reduced-motion: no-preference)').matches
+    ) {
+      const dots: HTMLElement[] = [];
+      const MAX = 16;
+      let last = 0;
+      window.addEventListener(
+        'pointermove',
+        (e) => {
+          const now = performance.now();
+          if (now - last < 16) return;
+          last = now;
+          const d = document.createElement('div');
+          d.style.cssText = `position:fixed;left:${e.clientX}px;top:${e.clientY}px;width:7px;height:7px;border-radius:50%;background:var(--accent);pointer-events:none;z-index:9999;transform:translate(-50%,-50%);opacity:0.55;transition:opacity .6s ease,transform .6s ease;`;
+          document.body.appendChild(d);
+          dots.push(d);
+          requestAnimationFrame(() => {
+            d.style.opacity = '0';
+            d.style.transform = 'translate(-50%,-50%) scale(0.2)';
+          });
+          if (dots.length > MAX) {
+            const old = dots.shift();
+            if (old) setTimeout(() => old.remove(), 600);
+          }
+        },
+        { passive: true }
+      );
+    }
   }
 </script>

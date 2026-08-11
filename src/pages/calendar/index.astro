@@ -1,0 +1,129 @@
+---
+import Base from '../../layouts/Base.astro';
+import Back from '../../components/Back.astro';
+import { getAllPosts } from '../../utils';
+
+const posts = await getAllPosts();
+const items = posts.map((p) => ({
+  date: p.data.date.toISOString().slice(0, 10),
+  title: p.data.title,
+  url: `/posts/${p.id}/`,
+}));
+---
+
+<Base title="Lịch" description="Lịch bài viết theo ngày.">
+  <div class="container">
+    <div class="page-wrap">
+      <Back href="/" />
+      <h1 class="page-title">Lịch</h1>
+      <div class="calendar">
+        <div class="cal-header">
+          <button id="cal-prev" type="button" aria-label="Tháng trước">‹</button>
+          <span id="cal-label"></span>
+          <button id="cal-next" type="button" aria-label="Tháng sau">›</button>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+        <div id="cal-day-posts" class="cal-day-posts"></div>
+      </div>
+    </div>
+  </div>
+  <script type="application/json" id="cal-data" set:html={JSON.stringify(items)} />
+</Base>
+
+<script>
+  function renderCalendar() {
+    const dataEl = document.getElementById('cal-data');
+    if (!dataEl) return;
+    const items = JSON.parse(dataEl.textContent || '[]');
+    const byDay: Record<string, typeof items> = {};
+    items.forEach((p) => {
+      (byDay[p.date] ||= []).push(p);
+    });
+    const monthsVi = [
+      'Tháng 1',
+      'Tháng 2',
+      'Tháng 3',
+      'Tháng 4',
+      'Tháng 5',
+      'Tháng 6',
+      'Tháng 7',
+      'Tháng 8',
+      'Tháng 9',
+      'Tháng 10',
+      'Tháng 11',
+      'Tháng 12',
+    ];
+    const weekdays = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+    let cur = new Date();
+    if (items.length) {
+      const [y, m] = items[0].date.split('-').map(Number);
+      cur = new Date(y, m - 1, 1);
+    }
+    const label = document.getElementById('cal-label');
+    const grid = document.getElementById('cal-grid');
+    const dayPosts = document.getElementById('cal-day-posts');
+    const prev = document.getElementById('cal-prev');
+    const next = document.getElementById('cal-next');
+    if (!label || !grid || !dayPosts || !prev || !next) return;
+    function escapeHtml(s: string) {
+      return String(s).replace(
+        /[&<>"']/g,
+        (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]
+      );
+    }
+    function key(y: number, m: number, d: number) {
+      return y + '-' + String(m + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+    }
+    function showDay(k: string) {
+      const list = byDay[k] || [];
+      dayPosts.innerHTML =
+        '<div class="cal-day-title">Bài viết ngày ' +
+        k +
+        '</div>' +
+        list
+          .map((p) => '<a class="cal-item" href="' + p.url + '">' + escapeHtml(p.title) + '</a>')
+          .join('');
+    }
+    function render() {
+      const y = cur.getFullYear();
+      const m = cur.getMonth();
+      label.textContent = monthsVi[m] + ' ' + y;
+      const offset = (new Date(y, m, 1).getDay() + 6) % 7;
+      const days = new Date(y, m + 1, 0).getDate();
+      let html = weekdays.map((w) => '<div class="cal-dow">' + w + '</div>').join('');
+      for (let i = 0; i < offset; i++) html += '<div class="cal-cell empty"></div>';
+      for (let d = 1; d <= days; d++) {
+        const k = key(y, m, d);
+        const has = byDay[k];
+        html +=
+          '<div class="cal-cell' +
+          (has ? ' has' : '') +
+          '" data-day="' +
+          k +
+          '">' +
+          d +
+          (has ? ' <span class="cal-dot"></span>' : '') +
+          '</div>';
+      }
+      grid.innerHTML = html;
+      dayPosts.innerHTML = '';
+      grid.querySelectorAll('.cal-cell.has').forEach((cell) => {
+        cell.addEventListener('click', () => showDay((cell as HTMLElement).dataset.day || ''));
+      });
+    }
+    prev.onclick = () => {
+      cur.setMonth(cur.getMonth() - 1);
+      render();
+    };
+    next.onclick = () => {
+      cur.setMonth(cur.getMonth() + 1);
+      render();
+    };
+    render();
+  }
+  renderCalendar();
+  if (!(window as any).__calInit) {
+    (window as any).__calInit = true;
+    document.addEventListener('astro:page-load', renderCalendar);
+  }
+</script>

@@ -1,0 +1,40 @@
+---
+import Base from '../layouts/Base.astro';
+import PostCard from '../components/PostCard.astro';
+import Avatar from '../components/Avatar.astro';
+import { getAllPosts } from '../utils';
+import { SITE } from '../consts';
+
+const posts = await getAllPosts();
+const recent = posts.slice(0, 3);
+---
+
+<Base>
+  <div class="container">
+    <section class="hero">
+      <Avatar size={96} />
+      <div class="hero-text">
+        <h1>{SITE.title}</h1>
+        <p>{SITE.description}</p>
+      </div>
+      <div class="hero-links">
+        <a href="/posts/">Bài viết</a>
+        <a href="/tags/">Thẻ</a>
+        <a href="/calendar/">Lịch</a>
+      </div>
+    </section>
+    <section class="home-section">
+      <h2 class="home-section-title">Bài viết mới</h2>
+      <div class="post-list">
+        {recent.map((post) => <PostCard post={post} />)}
+      </div>
+      {
+        posts.length > recent.length && (
+          <a class="home-more" href="/posts/">
+            Xem tất cả bài viết →
+          </a>
+        )
+      }
+    </section>
+  </div>
+</Base>

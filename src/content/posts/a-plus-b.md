@@ -3,7 +3,6 @@ title: A + B
 date: 2026-08-11 13:30:00
 description: Bài mẫu A + B — đọc hai số nguyên và in ra tổng, kèm giải thích, cài đặt C++/Python và phân tích độ phức tạp.
 tags: [mẫu, cơ bản, cpp]
-category: Cơ bản
 ---
 
 ## Đề bài
@@ -27,13 +26,7 @@ Một số nguyên: tổng $A + B$.
 
 ## Lời giải
 
-Đây là bài toán cơ bản nhất. Tổng $A + B$ có thể vượt phạm vi của `int` 32-bit (tối đa $\approx 2{,}1 \times 10^9$), nên ta dùng `long long` để an toàn:
-
-$$
-|A + B| \le |A| + |B| \le 2 \times 10^9 < 2^{31} - 1
-$$
-
-> Mẹo: trong C++, khi tổng có thể vượt $\pm 2 \times 10^9$ thì nên dùng `long long` thay vì `int`.
+Đây là bài toán cơ bản nhất. Với ràng buộc $-10^9 \le A, B \le 10^9$, tổng $A + B$ nằm trong khoảng $[-2 \times 10^9,\, 2 \times 10^9]$, vẫn nằm gọn trong phạm vi của `int` 32-bit (khoảng $\pm 2{,}1 \times 10^9$). Do đó ta chỉ cần đọc hai số và in ra tổng.
 
 ## Cài đặt C++
 
@@ -42,7 +35,7 @@ $$
 using namespace std;
 
 int main() {
-    long long a, b;
+    int a, b;
     cin >> a >> b;
     cout << a + b << '\n';
     return 0;

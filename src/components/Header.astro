@@ -2,6 +2,7 @@
 import { SITE, SOCIAL } from '../consts';
 import ThemeToggle from './ThemeToggle.astro';
 import Avatar from './Avatar.astro';
+import { Icon } from 'astro-icon/components';
 const path = Astro.url.pathname;
 const isActive = (href: string) =>
   href === '/' ? path === '/' || path === '' : path.startsWith(href);
@@ -23,6 +24,72 @@ const isActive = (href: string) =>
       }
     </nav>
     <div class="header-actions">
+      <div class="search-wrap">
+        <form class="header-search" role="search" action="/search/" method="get" id="header-search">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <circle cx="11" cy="11" r="7"></circle>
+            <path d="M21 21l-4.3-4.3"></path>
+          </svg>
+          <input type="search" name="q" placeholder="Tìm…" aria-label="Tìm kiếm" />
+          <button class="header-search-clear" type="button" aria-label="Xoá ô tìm kiếm">
+            <Icon name="mdi:broom" />
+          </button>
+          <button class="header-search-submit" type="submit" aria-label="Tìm kiếm">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M5 12h14M13 6l6 6-6 6"></path>
+            </svg>
+          </button>
+          <button class="header-search-close" type="button" aria-label="Đóng tìm kiếm">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M18 6 6 18M6 6l12 12"></path>
+            </svg>
+          </button>
+        </form>
+        <button
+          class="header-search-icon"
+          type="button"
+          id="search-toggle"
+          aria-label="Tìm kiếm"
+          aria-expanded="false"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <circle cx="11" cy="11" r="7"></circle>
+            <path d="M21 21l-4.3-4.3"></path>
+          </svg>
+        </button>
+      </div>
       <ThemeToggle />
       <button
         class="nav-toggle"
@@ -48,27 +115,87 @@ const isActive = (href: string) =>
 </header>
 
 <script>
-  const header = document.getElementById('site-header');
-  const toggle = document.getElementById('nav-toggle');
-  const nav = document.getElementById('site-nav');
-  function closeNav() {
-    header?.classList.remove('nav-open');
-    toggle?.setAttribute('aria-expanded', 'false');
+  function setupNav() {
+    const header = document.getElementById('site-header');
+    const toggle = document.getElementById('nav-toggle');
+    const nav = document.getElementById('site-nav');
+    if (!header || !toggle || !nav) return;
+    function closeNav() {
+      header.classList.remove('nav-open');
+      toggle.setAttribute('aria-expanded', 'false');
+    }
+    toggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const open = header.classList.toggle('nav-open');
+      toggle.setAttribute('aria-expanded', String(!!open));
+    });
+    nav.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement).tagName === 'A') closeNav();
+    });
   }
-  toggle?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    const open = header?.classList.toggle('nav-open');
-    toggle.setAttribute('aria-expanded', String(!!open));
-  });
-  nav?.addEventListener('click', (e) => {
-    if ((e.target as HTMLElement).tagName === 'A') closeNav();
-  });
-  document.addEventListener('click', (e) => {
-    if (header?.classList.contains('nav-open') && !header.contains(e.target as Node)) closeNav();
-  });
-  window.addEventListener('resize', () => {
-    if (window.innerWidth > 560) closeNav();
-  });
+  function setupSearch() {
+    const header = document.getElementById('site-header');
+    const toggle = document.getElementById('search-toggle');
+    const form = document.getElementById('header-search');
+    const input = form?.querySelector('input') as HTMLInputElement | null;
+    const close = form?.querySelector('.header-search-close') as HTMLButtonElement | null;
+    const clearBtn = form?.querySelector('.header-search-clear') as HTMLButtonElement | null;
+    if (!header || !toggle || !form || !input) return;
+    function open() {
+      header.classList.add('search-open');
+      toggle.setAttribute('aria-expanded', 'true');
+      setTimeout(() => input.focus(), 0);
+    }
+    function closeSearch() {
+      header.classList.remove('search-open');
+      toggle.setAttribute('aria-expanded', 'false');
+    }
+    toggle.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (header.classList.contains('search-open')) closeSearch();
+      else open();
+    });
+    close?.addEventListener('click', closeSearch);
+    clearBtn?.addEventListener('click', () => {
+      input.value = '';
+      input.focus();
+    });
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeSearch();
+    });
+  }
+  if (!(window as any).__navInit) {
+    (window as any).__navInit = true;
+    const closeNav = () => {
+      const header = document.getElementById('site-header');
+      const toggle = document.getElementById('nav-toggle');
+      header?.classList.remove('nav-open');
+      toggle?.setAttribute('aria-expanded', 'false');
+    };
+    const closeSearch = () => {
+      const header = document.getElementById('site-header');
+      header?.classList.remove('search-open');
+      document.getElementById('search-toggle')?.setAttribute('aria-expanded', 'false');
+    };
+    document.addEventListener('click', (e) => {
+      const header = document.getElementById('site-header');
+      if (header?.classList.contains('nav-open') && !header.contains(e.target as Node)) closeNav();
+    });
+    let rt: ReturnType<typeof setTimeout> | undefined;
+    window.addEventListener('resize', () => {
+      document.documentElement.classList.add('no-transition');
+      clearTimeout(rt);
+      rt = setTimeout(() => document.documentElement.classList.remove('no-transition'), 200);
+      if (window.innerWidth > 768) {
+        closeNav();
+        closeSearch();
+      }
+    });
+    document.addEventListener('astro:page-load', () => {
+      setupNav();
+      setupSearch();
+    });
+  }
 </script>
 
 <style>

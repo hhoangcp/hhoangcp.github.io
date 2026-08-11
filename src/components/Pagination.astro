@@ -1,0 +1,30 @@
+---
+interface Props {
+  page: number;
+  lastPage: number;
+  pageHref: (n: number) => string;
+}
+const { page, lastPage, pageHref } = Astro.props;
+---
+
+{
+  lastPage > 1 && (
+    <nav class="pagination" aria-label="Phân trang">
+      {page > 1 && (
+        <a href={pageHref(page - 1)} rel="prev">
+          ← Trước
+        </a>
+      )}
+      {Array.from({ length: lastPage }, (_, i) => i + 1).map((n) => (
+        <a href={pageHref(n)} class={n === page ? 'active' : ''}>
+          {n}
+        </a>
+      ))}
+      {page < lastPage && (
+        <a href={pageHref(page + 1)} rel="next">
+          Sau →
+        </a>
+      )}
+    </nav>
+  )
+}

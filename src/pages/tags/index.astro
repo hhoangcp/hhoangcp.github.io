@@ -1,5 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
+import Back from '../../components/Back.astro';
 import { getAllPosts, getAllTags, capitalize } from '../../utils';
 
 const posts = await getAllPosts();
@@ -9,13 +10,28 @@ const tags = getAllTags(posts);
 <Base title="Thẻ" description="Tất cả thẻ (tags).">
   <div class="container">
     <div class="page-wrap">
+      <Back href="/" />
       <h1 class="page-title">Thẻ</h1>
       <p class="page-sub">{tags.length} thẻ</p>
-      <div class="tag-cloud">
+      <div class="tax-list">
         {
           tags.map(([tag, count]) => (
             <a href={`/tags/${tag}/`}>
-              {capitalize(tag)}
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <>
+                  <path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+                  <circle cx="7" cy="7" r="1.2" />
+                </>
+              </svg>
+              <span class="tax-name">{capitalize(tag)}</span>
               <span class="count">{count}</span>
             </a>
           ))

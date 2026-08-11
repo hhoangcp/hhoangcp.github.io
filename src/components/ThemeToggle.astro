@@ -38,13 +38,36 @@
 </button>
 
 <script>
-  const btn = document.getElementById('theme-toggle');
-  btn?.addEventListener('click', () => {
-    const cur = document.documentElement.getAttribute('data-theme') || 'light';
-    const next = cur === 'dark' ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', next);
-    try {
-      localStorage.setItem('theme', next);
-    } catch {}
-  });
+  if (!(window as any).__themeInit) {
+    (window as any).__themeInit = true;
+    document.addEventListener('astro:page-load', () => {
+      const btn = document.getElementById('theme-toggle');
+      btn?.addEventListener('click', () => {
+        const cur = document.documentElement.getAttribute('data-theme') || 'light';
+        const next = cur === 'dark' ? 'light' : 'dark';
+        const setTheme = () => {
+          document.documentElement.setAttribute('data-theme', next);
+          try {
+            localStorage.setItem('theme', next);
+          } catch {}
+        };
+        if (document.startViewTransition) {
+          const rect = btn.getBoundingClientRect();
+          const html = document.documentElement;
+          html.style.setProperty('--toggle-x', rect.left + rect.width / 2 + 'px');
+          html.style.setProperty('--toggle-y', rect.top + rect.height / 2 + 'px');
+          html.style.viewTransitionName = 'theme-root';
+          const mainEl = document.querySelector('main');
+          if (mainEl) mainEl.style.viewTransitionName = 'none';
+          const t = document.startViewTransition(setTheme);
+          t.finished.finally(() => {
+            html.style.viewTransitionName = '';
+            if (mainEl) mainEl.style.viewTransitionName = '';
+          });
+        } else {
+          setTheme();
+        }
+      });
+    });
+  }
 </script>
