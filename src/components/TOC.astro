@@ -1,0 +1,29 @@
+---
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+interface Props {
+  headings: Heading[];
+}
+const { headings = [] } = Astro.props;
+const items = headings.filter((h) => h.depth >= 2 && h.depth <= 4);
+---
+
+{
+  items.length > 0 && (
+    <aside class="post-toc">
+      <nav class="toc" aria-label="Mục lục">
+        <div class="toc-title">Mục lục</div>
+        <ul>
+          {items.map((h) => (
+            <li class={`toc-h${h.depth}`}>
+              <a href={`#${h.slug}`}>{h.text}</a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    </aside>
+  )
+}

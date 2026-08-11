@@ -1,0 +1,33 @@
+---
+import type { GetStaticPaths } from 'astro';
+import Base from '../../layouts/Base.astro';
+import PostCard from '../../components/PostCard.astro';
+import { getAllPosts, capitalize } from '../../utils';
+
+export const getStaticPaths = (async () => {
+  const posts = await getAllPosts();
+  const tags = new Set<string>();
+  for (const p of posts) for (const t of p.data.tags) tags.add(t);
+  return [...tags].map((tag) => ({
+    params: { tag },
+    props: {
+      tag,
+      posts: posts.filter((p) => p.data.tags.includes(tag)),
+    },
+  }));
+}) satisfies GetStaticPaths;
+
+const { tag, posts } = Astro.props;
+---
+
+<Base title={`Thẻ: ${capitalize(tag)}`} description={`Bài viết gắn thẻ ${capitalize(tag)}.`}>
+  <div class="container">
+    <div class="page-wrap">
+      <h1 class="page-title">{capitalize(tag)}</h1>
+      <p class="page-sub">{posts.length} bài viết</p>
+      <div class="post-list">
+        {posts.map((post) => <PostCard post={post} />)}
+      </div>
+    </div>
+  </div>
+</Base>

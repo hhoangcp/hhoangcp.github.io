@@ -1,0 +1,42 @@
+---
+import Base from './Base.astro';
+import type { CollectionEntry } from 'astro:content';
+import { render } from 'astro:content';
+import TOC from '../components/TOC.astro';
+import { formatDateLong, capitalize } from '../utils';
+
+interface Props {
+  post: CollectionEntry<'posts'>;
+}
+const { post } = Astro.props;
+const { Content, headings } = await render(post);
+const d = post.data;
+---
+
+<Base title={d.title} description={d.description}>
+  <div class="container container-wide">
+    <article class="post-layout">
+      <div class="post-main">
+        <header class="post-header">
+          <h1>{d.title}</h1>
+          <div class="post-meta">
+            <time datetime={d.date.toISOString()}>{formatDateLong(d.date)}</time>
+            {d.updated && <span title="Cập nhật">· cập nhật {formatDateLong(d.updated)}</span>}
+            {d.category && <span class="meta-cat">{capitalize(d.category)}</span>}
+            {
+              d.tags.map((t) => (
+                <a class="tag-link" href={`/tags/${t}/`}>
+                  {capitalize(t)}
+                </a>
+              ))
+            }
+          </div>
+        </header>
+        <div class="post-content">
+          <Content />
+        </div>
+      </div>
+      <TOC headings={headings} />
+    </article>
+  </div>
+</Base>

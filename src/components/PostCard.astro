@@ -1,0 +1,28 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { formatDate, capitalize } from '../utils';
+interface Props {
+  post: CollectionEntry<'posts'>;
+}
+const { post } = Astro.props;
+const url = `/posts/${post.id}/`;
+const d = post.data;
+---
+
+<article class="post-card">
+  <h2 class="post-card-title"><a href={url}>{d.title}</a></h2>
+  <div class="post-card-meta">
+    <time datetime={d.date.toISOString()}>{formatDate(d.date)}</time>
+    {d.category && <span class="meta-cat">{capitalize(d.category)}</span>}
+  </div>
+  {d.description && <p class="post-card-excerpt">{d.description}</p>}
+  {
+    d.tags.length > 0 && (
+      <div class="post-card-tags">
+        {d.tags.map((t) => (
+          <a href={`/tags/${t}/`}>{capitalize(t)}</a>
+        ))}
+      </div>
+    )
+  }
+</article>

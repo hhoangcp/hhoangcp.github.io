@@ -1,0 +1,51 @@
+---
+import { SITE } from '../consts';
+interface Props {
+  size?: number;
+  class?: string;
+}
+const { size = 96, class: className = '' } = Astro.props;
+const initial = (SITE.author.charAt(0) || 'H').toUpperCase();
+---
+
+<div class={`avatar ${className}`} style={`--sz:${size}px`}>
+  <span class="avatar-fallback">{initial}</span>
+  <img
+    src="/avatar.webp"
+    alt={SITE.author}
+    loading="lazy"
+    decoding="async"
+    onerror="var a=['/avatar.jpg','/avatar.jpeg','/avatar.png'];var i=+(this.dataset.i||0)+1;this.dataset.i=i;if(i<=a.length){this.src=a[i-1];}else{this.style.display='none';}"
+  />
+</div>
+
+<style>
+  .avatar {
+    position: relative;
+    width: var(--sz);
+    height: var(--sz);
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, var(--accent), #ff8fc6);
+    box-shadow: var(--shadow);
+  }
+  .avatar-fallback {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    color: #fff;
+    font-size: calc(var(--sz) * 0.42);
+  }
+  .avatar img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+  }
+</style>

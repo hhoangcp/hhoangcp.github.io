@@ -1,0 +1,26 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getAllPosts, getAllTags, capitalize } from '../../utils';
+
+const posts = await getAllPosts();
+const tags = getAllTags(posts);
+---
+
+<Base title="Thẻ" description="Tất cả thẻ (tags).">
+  <div class="container">
+    <div class="page-wrap">
+      <h1 class="page-title">Thẻ</h1>
+      <p class="page-sub">{tags.length} thẻ</p>
+      <div class="tag-cloud">
+        {
+          tags.map(([tag, count]) => (
+            <a href={`/tags/${tag}/`}>
+              {capitalize(tag)}
+              <span class="count">{count}</span>
+            </a>
+          ))
+        }
+      </div>
+    </div>
+  </div>
+</Base>

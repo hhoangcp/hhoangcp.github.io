@@ -1,0 +1,29 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getAllPosts, groupByYear, formatDate } from '../../utils';
+
+const posts = await getAllPosts();
+const groups = groupByYear(posts);
+---
+
+<Base title="Lưu trữ" description="Tất cả bài viết theo thời gian.">
+  <div class="container">
+    <div class="page-wrap">
+      <h1 class="page-title">Lưu trữ</h1>
+      <p class="page-sub">{posts.length} bài viết</p>
+      {
+        groups.map(([year, items]) => (
+          <section class="archive-group">
+            <div class="archive-year">{year}</div>
+            {items.map((p) => (
+              <div class="archive-item">
+                <time datetime={p.data.date.toISOString()}>{formatDate(p.data.date)}</time>
+                <a href={`/posts/${p.id}/`}>{p.data.title}</a>
+              </div>
+            ))}
+          </section>
+        ))
+      }
+    </div>
+  </div>
+</Base>

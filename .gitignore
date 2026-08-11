@@ -1,0 +1,18 @@
+# build output
+dist/
+# generated astro types
+.astro/
+# dependencies
+node_modules/
+# logs
+npm-debug.log*
+*.log
+# environment
+.env
+.env.production
+# os
+.DS_Store
+Thumbs.db
+# editor
+.vscode/
+.idea/
