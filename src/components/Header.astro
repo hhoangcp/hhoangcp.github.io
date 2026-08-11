@@ -144,11 +144,28 @@ const isActive = (href: string) =>
     function open() {
       header.classList.add('search-open');
       toggle.setAttribute('aria-expanded', 'true');
-      setTimeout(() => input.focus(), 0);
+      const rect = form.getBoundingClientRect();
+      const vw = window.innerWidth;
+      if (rect.left < 12 || rect.right > vw - 12) {
+        form.style.position = 'fixed';
+        form.style.top = rect.top + 'px';
+        form.style.right = '12px';
+        form.style.left = 'auto';
+      } else {
+        form.style.position = '';
+        form.style.top = '';
+        form.style.right = '';
+        form.style.left = '';
+      }
+      input.focus();
     }
     function closeSearch() {
       header.classList.remove('search-open');
       toggle.setAttribute('aria-expanded', 'false');
+      form.style.position = '';
+      form.style.top = '';
+      form.style.right = '';
+      form.style.left = '';
     }
     toggle.addEventListener('click', (e) => {
       e.preventDefault();
@@ -176,6 +193,29 @@ const isActive = (href: string) =>
       const header = document.getElementById('site-header');
       header?.classList.remove('search-open');
       document.getElementById('search-toggle')?.setAttribute('aria-expanded', 'false');
+      const form = document.getElementById('header-search');
+      if (form) {
+        form.style.position = '';
+        form.style.top = '';
+        form.style.right = '';
+        form.style.left = '';
+      }
+    };
+    const repositionSearch = () => {
+      const form = document.getElementById('header-search');
+      if (!form) return;
+      form.style.position = '';
+      form.style.top = '';
+      form.style.right = '';
+      form.style.left = '';
+      const rect = form.getBoundingClientRect();
+      const vw = window.innerWidth;
+      if (rect.left < 12 || rect.right > vw - 12) {
+        form.style.position = 'fixed';
+        form.style.top = rect.top + 'px';
+        form.style.right = '12px';
+        form.style.left = 'auto';
+      }
     };
     document.addEventListener('click', (e) => {
       const header = document.getElementById('site-header');
@@ -189,6 +229,9 @@ const isActive = (href: string) =>
       if (window.innerWidth > 768) {
         closeNav();
         closeSearch();
+      } else {
+        const header = document.getElementById('site-header');
+        if (header?.classList.contains('search-open')) repositionSearch();
       }
     });
     document.addEventListener('astro:page-load', () => {

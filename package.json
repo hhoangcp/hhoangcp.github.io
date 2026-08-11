@@ -18,7 +18,9 @@
     "@iconify-json/mdi": "^1.2.3",
     "astro": "^7.2.0",
     "astro-icon": "^1.1.5",
+    "cursor-effects": "^1.0.18",
     "katex": "^0.18.4",
+    "oh-my-live2d": "^0.19.3",
     "rehype-katex": "^7.0.1",
     "remark-math": "^6.0.0"
   },

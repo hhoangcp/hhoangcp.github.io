@@ -6,7 +6,6 @@ import { SITE } from '../consts';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import Snow from '../components/effects/Snow.astro';
-import CursorTrail from '../components/effects/CursorTrail.astro';
 import ClickRipple from '../components/effects/ClickRipple.astro';
 
 interface Props {
@@ -65,7 +64,6 @@ const ogImage = image ? new URL(image, Astro.site).href : undefined;
       <slot />
     </main>
     <Footer />
-    <CursorTrail />
     <ClickRipple />
     <script>
       const map: Record<string, string> = {

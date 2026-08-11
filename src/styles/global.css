@@ -227,7 +227,7 @@ html[data-theme='dark'] .bg-overlay {
 
 /* Header search bar */
 .header-search {
-  display: none;
+  display: flex;
   position: absolute;
   top: calc(100% + 4px);
   right: 0;
@@ -235,6 +235,8 @@ html[data-theme='dark'] .bg-overlay {
   width: 300px;
   max-width: calc(100vw - 24px);
   align-items: center;
+  overflow-x: auto;
+  overflow-y: hidden;
   gap: 4px;
   padding: 6px;
   background: var(--bg);
@@ -242,9 +244,20 @@ html[data-theme='dark'] .bg-overlay {
   border-radius: 12px;
   box-shadow: var(--shadow);
   z-index: 60;
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(-8px);
+  pointer-events: none;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease,
+    visibility 0.2s;
 }
 .site-header.search-open .header-search {
-  display: flex;
+  visibility: visible;
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
 }
 .header-search svg {
   width: 16px;
@@ -253,8 +266,9 @@ html[data-theme='dark'] .bg-overlay {
   flex-shrink: 0;
 }
 .header-search input {
-  flex: 1;
+  flex: 1 0;
   width: auto;
+  min-width: 80px;
   padding: 0;
   border: none;
   background: none;
@@ -1253,6 +1267,12 @@ html[data-theme='dark'] .astro-code span {
   position: fixed;
   inset: 0;
   z-index: 0;
+  pointer-events: none;
+}
+#fx-cursor {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
   pointer-events: none;
 }
 .fx-ripple {
