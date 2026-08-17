@@ -16,7 +16,7 @@
     "@astrojs/rss": "^4.0.19",
     "@astrojs/sitemap": "^3.7.3",
     "@iconify-json/mdi": "^1.2.3",
-    "astro": "^7.2.0",
+    "astro": "^7.2.2",
     "astro-icon": "^1.1.5",
     "cursor-effects": "^1.0.18",
     "katex": "^0.18.4",
