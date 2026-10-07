@@ -1,0 +1,76 @@
+---
+import Base from '../../layouts/Base.astro';
+import Avatar from '../../components/Avatar.astro';
+import { Icon } from 'astro-icon/components';
+import { SITE, SOCIAL } from '../../consts';
+
+const iconMap: Record<string, string> = {
+  github: 'mdi:github',
+  facebook: 'mdi:facebook',
+  mail: 'mdi:email',
+};
+
+const interests = [
+  'Cấu trúc dữ liệu',
+  'Quy hoạch động',
+  'Đồ thị',
+  'Hình học tính toán',
+  'Số học',
+  'Cây phân đoạn',
+];
+---
+
+<Base
+  title="Giới thiệu"
+  description="Giới thiệu bản thân và những ghi chép về thuật toán, lập trình."
+>
+  <div class="container">
+    <div class="page-wrap about">
+      <section class="about-hero">
+        <Avatar size={96} />
+        <div class="about-hero-text">
+          <h1 class="page-title">{SITE.author}</h1>
+          <p class="about-tagline">{SITE.description}</p>
+        </div>
+      </section>
+
+      <section class="about-section">
+        <h2 class="about-section-title">Về tôi</h2>
+        <div class="about-text">
+          <p>
+            Mình là <strong>{SITE.author}</strong>, một người yêu thích thuật toán và lập trình.
+            Blog này là nơi mình ghi lại lời giải, kiến thức và những bài học trong quá trình học
+            tập, đồng thời chia sẻ để ai đang bắt đầu cũng có thể tự học theo.
+          </p>
+          <p>Mình viết chủ yếu bằng C++ và Python, đôi khi thêm vài mẹc nhỏ và công cụ hữu ích.</p>
+        </div>
+      </section>
+
+      <section class="about-section">
+        <h2 class="about-section-title">Lĩnh vực quan tâm</h2>
+        <div class="interest-chips">
+          {interests.map((t) => <span class="interest-chip">{t}</span>)}
+        </div>
+      </section>
+
+      <section class="about-section">
+        <h2 class="about-section-title">Liên hệ</h2>
+        <div class="about-contact">
+          {
+            SOCIAL.map((s) => (
+              <a
+                class="about-contact-link"
+                href={s.href}
+                target={s.href.startsWith('http') ? '_blank' : undefined}
+                rel={s.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+              >
+                <Icon name={iconMap[s.icon]} />
+                <span>{s.label}</span>
+              </a>
+            ))
+          }
+        </div>
+      </section>
+    </div>
+  </div>
+</Base>

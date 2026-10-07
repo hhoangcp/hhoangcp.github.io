@@ -1,12 +1,13 @@
 ---
 import type { CollectionEntry } from 'astro:content';
-import { formatDate, capitalize } from '../utils';
+import { formatDate, capitalize, slugify, prettyTag } from '../utils';
 interface Props {
   post: CollectionEntry<'posts'>;
 }
 const { post } = Astro.props;
 const url = `/posts/${post.id}/`;
 const d = post.data;
+const cats = d.category.map((c) => ({ name: c, slug: slugify(c) }));
 ---
 
 <article class="post-card">
@@ -26,13 +27,56 @@ const d = post.data;
       >
       <time datetime={d.date.toISOString()}>{formatDate(d.date)}</time>
     </span>
+    {
+      d.source &&
+        (d.sourceUrl ? (
+          <a class="src-badge" href={d.sourceUrl} target="_blank" rel="noopener noreferrer">
+            {d.source}
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M14 3h7v7M21 3l-9 9M19 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5" />
+            </svg>
+          </a>
+        ) : (
+          <span class="src-badge">{d.source}</span>
+        ))
+    }
   </div>
   {d.description && <p class="post-card-excerpt">{d.description}</p>}
+  {
+    cats.length > 0 && (
+      <div class="post-card-cats">
+        {cats.map((c) => (
+          <a class="cat-badge" href={`/category/${c.slug}/`}>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.5L10 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z" />
+            </svg>
+            {capitalize(c.name)}
+          </a>
+        ))}
+      </div>
+    )
+  }
   {
     d.tags.length > 0 && (
       <div class="post-card-tags">
         {d.tags.map((t) => (
-          <a href={`/tags/${t}/`}>{capitalize(t)}</a>
+          <a href={`/tags/${slugify(t)}/`}>{prettyTag(t)}</a>
         ))}
       </div>
     )

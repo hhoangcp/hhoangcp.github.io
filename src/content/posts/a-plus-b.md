@@ -2,7 +2,10 @@
 title: A + B
 date: 2026-08-11 13:30:00
 description: Bài mẫu A + B — đọc hai số nguyên và in ra tổng, kèm giải thích, cài đặt C++/Python và phân tích độ phức tạp.
-tags: [mẫu, cơ bản, cpp]
+tags: [cpp, python, implementation]
+source: VNOJ — A cộng B
+sourceUrl: https://oj.vnoi.info/problem/post
+category: [Cơ bản]
 ---
 
 ## Đề bài
@@ -19,10 +22,11 @@ Một số nguyên: tổng $A + B$.
 
 ### Ví dụ
 
-| Input  | Output |
-| ------ | ------ |
-| `3 5`  | `8`    |
-| `-2 7` | `5`    |
+<div class="io" data-io="Input"><pre>3 5
+-2 7</pre></div>
+
+<div class="io" data-io="Output"><pre>8
+5</pre></div>
 
 ## Lời giải
 

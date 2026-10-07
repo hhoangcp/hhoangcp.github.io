@@ -1,7 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
-import Back from '../../components/Back.astro';
-import { getAllPosts, getAllTags, capitalize } from '../../utils';
+import { getAllPosts, getAllTags, prettyTag } from '../../utils';
 
 const posts = await getAllPosts();
 const tags = getAllTags(posts);
@@ -10,13 +9,12 @@ const tags = getAllTags(posts);
 <Base title="Thẻ" description="Tất cả thẻ (tags).">
   <div class="container">
     <div class="page-wrap">
-      <Back href="/" />
       <h1 class="page-title">Thẻ</h1>
       <p class="page-sub">{tags.length} thẻ</p>
       <div class="tax-list">
         {
-          tags.map(([tag, count]) => (
-            <a href={`/tags/${tag}/`}>
+          tags.map((t) => (
+            <a href={`/tags/${t.slug}/`}>
               <svg
                 viewBox="0 0 24 24"
                 fill="none"
@@ -31,8 +29,8 @@ const tags = getAllTags(posts);
                   <circle cx="7" cy="7" r="1.2" />
                 </>
               </svg>
-              <span class="tax-name">{capitalize(tag)}</span>
-              <span class="count">{count}</span>
+              <span class="tax-name">{prettyTag(t.name)}</span>
+              <span class="count">{t.count}</span>
             </a>
           ))
         }

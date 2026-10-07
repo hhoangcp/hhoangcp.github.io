@@ -3,8 +3,16 @@ import Base from './Base.astro';
 import type { CollectionEntry } from 'astro:content';
 import { render } from 'astro:content';
 import TOC from '../components/TOC.astro';
-import Back from '../components/Back.astro';
-import { formatDateLong, capitalize } from '../utils';
+import ReadingProgress from '../components/ReadingProgress.astro';
+import {
+  formatDateLong,
+  capitalize,
+  slugify,
+  prettyTag,
+  getAdjacentPosts,
+  getRelatedPosts,
+  getAllPosts,
+} from '../utils';
 
 interface Props {
   post: CollectionEntry<'posts'>;
@@ -12,13 +20,17 @@ interface Props {
 const { post } = Astro.props;
 const { Content, headings } = await render(post);
 const d = post.data;
+const all = await getAllPosts();
+const { prev, next } = getAdjacentPosts(post, all);
+const related = getRelatedPosts(post, all, 3);
+const cats = d.category.map((c) => ({ name: c, slug: slugify(c) }));
 ---
 
 <Base title={d.title} description={d.description}>
+  <ReadingProgress />
   <div class="container container-wide">
     <article class="post-layout">
       <div class="post-main">
-        <Back href="/posts/" />
         <header class="post-header">
           <h1>{d.title}</h1>
           <div class="post-meta">
@@ -54,11 +66,54 @@ const d = post.data;
                 </span>
               )
             }
+            {
+              d.source &&
+                (d.sourceUrl ? (
+                  <a class="src-badge" href={d.sourceUrl} target="_blank" rel="noopener noreferrer">
+                    {d.source}
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M14 3h7v7M21 3l-9 9M19 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5" />
+                    </svg>
+                  </a>
+                ) : (
+                  <span class="src-badge">{d.source}</span>
+                ))
+            }
+            {
+              cats.length > 0 && (
+                <span class="meta-cats">
+                  {cats.map((c) => (
+                    <a class="cat-badge" href={`/category/${c.slug}/`}>
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                      >
+                        <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.5L10 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z" />
+                      </svg>
+                      {capitalize(c.name)}
+                    </a>
+                  ))}
+                </span>
+              )
+            }
             <span class="meta-tags">
               {
                 d.tags.map((t) => (
-                  <a class="tag-link" href={`/tags/${t}/`}>
-                    {capitalize(t)}
+                  <a class="tag-link" href={`/tags/${slugify(t)}/`}>
+                    {prettyTag(t)}
                   </a>
                 ))
               }
@@ -68,8 +123,84 @@ const d = post.data;
         <div class="post-content">
           <Content />
         </div>
+        {
+          (prev || next) && (
+            <nav class="post-nav" aria-label="Bài kế/trước">
+              {prev && (
+                <a class="post-nav-item prev" href={`/posts/${prev.id}/`}>
+                  <span class="post-nav-label">← Bài trước</span>
+                  <span class="post-nav-title">{prev.data.title}</span>
+                </a>
+              )}
+              {next && (
+                <a class="post-nav-item next" href={`/posts/${next.id}/`}>
+                  <span class="post-nav-label">Bài sau →</span>
+                  <span class="post-nav-title">{next.data.title}</span>
+                </a>
+              )}
+            </nav>
+          )
+        }
+        {
+          related.length > 0 && (
+            <section class="related-posts">
+              <h2 class="related-title">Bài viết liên quan</h2>
+              <div class="related-list">
+                {related.map((p) => (
+                  <a class="related-item" href={`/posts/${p.id}/`}>
+                    <span class="related-item-title">{p.data.title}</span>
+                    <span class="related-item-meta">{formatDateLong(p.data.date)}</span>
+                  </a>
+                ))}
+              </div>
+            </section>
+          )
+        }
       </div>
       <TOC headings={headings} />
     </article>
   </div>
 </Base>
+
+<script>
+  if (!(window as any).__ssInit) {
+    (window as any).__ssInit = true;
+    let io: IntersectionObserver | null = null;
+    document.addEventListener('astro:page-load', () => {
+      if (io) {
+        io.disconnect();
+        io = null;
+      }
+      const links = document.querySelectorAll<HTMLElement>('.post-toc a[href^="#"]');
+      if (!links.length) return;
+      const map = new Map<string, HTMLElement>();
+      links.forEach((a) => {
+        const id = a.getAttribute('href')?.slice(1) || '';
+        if (id) map.set(id, a);
+      });
+      const headings = [...map.keys()]
+        .map((id) => document.getElementById(id))
+        .filter((el): el is HTMLElement => !!el);
+      if (!headings.length) return;
+      io = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) {
+            if (!e.isIntersecting) continue;
+            const a = map.get((e.target as HTMLElement).id);
+            if (!a) continue;
+            links.forEach((l) => l.classList.remove('active'));
+            a.classList.add('active');
+          }
+        },
+        { rootMargin: '-80px 0px -70% 0px', threshold: 0 }
+      );
+      headings.forEach((h) => io!.observe(h));
+    });
+    document.addEventListener('astro:before-swap', () => {
+      if (io) {
+        io.disconnect();
+        io = null;
+      }
+    });
+  }
+</script>

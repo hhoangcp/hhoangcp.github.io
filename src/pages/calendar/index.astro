@@ -1,6 +1,5 @@
 ---
 import Base from '../../layouts/Base.astro';
-import Back from '../../components/Back.astro';
 import { getAllPosts } from '../../utils';
 
 const posts = await getAllPosts();
@@ -11,11 +10,10 @@ const items = posts.map((p) => ({
 }));
 ---
 
-<Base title="Lịch" description="Lịch bài viết theo ngày.">
+<Base title="Lịch bài viết" description="Lịch bài viết theo ngày.">
   <div class="container">
     <div class="page-wrap">
-      <Back href="/" />
-      <h1 class="page-title">Lịch</h1>
+      <h1 class="page-title">Lịch bài viết</h1>
       <div class="calendar">
         <div class="cal-header">
           <button id="cal-prev" type="button" aria-label="Tháng trước">‹</button>

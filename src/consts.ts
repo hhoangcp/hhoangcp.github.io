@@ -5,11 +5,14 @@ export const SITE = {
   url: 'https://hhoangcp.github.io',
   lang: 'vi',
   postsPerPage: 10,
+  rss: '/rss.xml',
   nav: [
     { label: 'Trang chủ', href: '/' },
     { label: 'Bài viết', href: '/posts/' },
     { label: 'Thẻ', href: '/tags/' },
-    { label: 'Lịch', href: '/calendar/' },
+    { label: 'Chủ đề', href: '/category/' },
+    { label: 'Lịch bài viết', href: '/calendar/' },
+    { label: 'Giới thiệu', href: '/about/' },
   ],
 };
 

@@ -2,7 +2,6 @@
 import Base from '../../layouts/Base.astro';
 import PostCard from '../../components/PostCard.astro';
 import Pagination from '../../components/Pagination.astro';
-import Back from '../../components/Back.astro';
 import { getAllPosts } from '../../utils';
 import { SITE } from '../../consts';
 
@@ -16,9 +15,8 @@ const pageHref = (n: number) => (n === 1 ? '/posts/' : `/posts/page/${n}/`);
 <Base title="Bài viết" description="Tất cả bài viết.">
   <div class="container">
     <div class="page-wrap">
-      <Back href="/" />
       <h1 class="page-title">Bài viết</h1>
-      <p class="page-sub">{all.length} bài viết</p>
+      <p class="page-sub">{all.length} bài viết · <a href="/archive/">Xem lưu trữ theo năm →</a></p>
       <div class="post-list">
         {posts.map((post) => <PostCard post={post} />)}
       </div>

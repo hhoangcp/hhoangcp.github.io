@@ -1,44 +1,92 @@
 ---
 import Base from '../../layouts/Base.astro';
-import Back from '../../components/Back.astro';
-import { getAllPosts } from '../../utils';
-
-const posts = await getAllPosts();
-const index = posts.map((p) => ({
-  title: p.data.title,
-  description: p.data.description ?? '',
-  tags: p.data.tags,
-  url: `/posts/${p.id}/`,
-  date: p.data.date.toISOString(),
-}));
 ---
 
-<Base title="Tìm kiếm" description="Tìm bài viết theo tiêu đề, mô tả, thẻ.">
+<Base title="Tìm kiếm" description="Tìm bài viết theo tiêu đề, mô tả, thẻ, nội dung.">
   <div class="container">
     <div class="page-wrap">
-      <Back href="/" />
       <h1 class="page-title">Tìm kiếm</h1>
       <div class="search-box">
         <input
           id="search-input"
           type="search"
-          placeholder="Tìm theo tiêu đề, mô tả, thẻ…"
+          placeholder="Tìm theo tiêu đề, mô tả, thẻ, nội dung…"
           autocomplete="off"
         />
       </div>
+      <p class="search-stats" id="search-stats"></p>
       <div id="search-results" class="search-results"></div>
     </div>
   </div>
-  <script type="application/json" id="search-data" set:html={JSON.stringify(index)} />
 </Base>
 
 <script>
-  function initSearch() {
-    const dataEl = document.getElementById('search-data');
+  type IndexItem = {
+    title: string;
+    description: string;
+    tags: string[];
+    category: string[];
+    url: string;
+    date: string;
+    body: string;
+  };
+
+  async function initSearch() {
     const input = document.getElementById('search-input') as HTMLInputElement | null;
     const results = document.getElementById('search-results');
-    if (!dataEl || !input || !results) return;
-    const index = JSON.parse(dataEl.textContent || '[]');
+    const stats = document.getElementById('search-stats');
+    if (!input || !results) return;
+
+    let index: IndexItem[] = [];
+    let indexPromise: Promise<void> | null = null;
+    const initial = new URLSearchParams(location.search).get('q') || '';
+    input.value = initial;
+
+    async function ensureIndex() {
+      if (index.length) return;
+      if (indexPromise) {
+        await indexPromise;
+        return;
+      }
+      indexPromise = (async () => {
+        try {
+          const res = await fetch('/search/index.json');
+          index = (await res.json()) as IndexItem[];
+        } catch {
+          index = [];
+        }
+      })();
+      await indexPromise;
+    }
+
+    async function run(q: string) {
+      if (!q.trim()) {
+        results.innerHTML = '';
+        if (stats) stats.textContent = '';
+        return;
+      }
+      if (!index.length) {
+        results.innerHTML = '<p class="search-hint">Đang tải chỉ mục tìm kiếm…</p>';
+        if (stats) stats.textContent = '';
+      }
+      await ensureIndex();
+      if (!index.length) {
+        results.innerHTML = '<p class="search-empty">Không tải được chỉ mục tìm kiếm.</p>';
+        return;
+      }
+      const query = q.trim().toLowerCase();
+      const matched = index.filter(
+        (p) =>
+          p.title.toLowerCase().includes(query) ||
+          p.description.toLowerCase().includes(query) ||
+          p.tags.some((t) => t.toLowerCase().includes(query)) ||
+          p.category.some((c) => c.toLowerCase().includes(query)) ||
+          p.body.toLowerCase().includes(query)
+      );
+      if (stats) stats.textContent = `${matched.length} kết quả`;
+      render(matched, q.trim());
+    }
+
     function escapeHtml(s: string) {
       return String(s).replace(
         /[&<>"']/g,
@@ -52,43 +100,45 @@ const index = posts.map((p) => ({
           })[c]
       );
     }
-    function render(list: typeof index) {
+    function escapeReg(s: string) {
+      return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+    function highlight(snippet: string, q: string) {
+      const esc = escapeHtml(snippet);
+      if (!q) return esc;
+      const re = new RegExp('(' + escapeReg(escapeHtml(q)) + ')', 'ig');
+      return esc.replace(re, '<mark>$1</mark>');
+    }
+    function snippet(body: string, q: string) {
+      const low = body.toLowerCase();
+      const idx = low.indexOf(q.toLowerCase());
+      if (idx < 0) return '';
+      const start = Math.max(0, idx - 80);
+      const end = Math.min(body.length, idx + q.length + 80);
+      return (start > 0 ? '…' : '') + body.slice(start, end) + (end < body.length ? '…' : '');
+    }
+    function render(list: IndexItem[], q: string) {
       if (!list.length) {
         results.innerHTML = '<p class="search-empty">Không tìm thấy bài viết phù hợp.</p>';
         return;
       }
       results.innerHTML = list
-        .map(
-          (p) =>
-            `<a class="search-item" href="${p.url}">
-              <span class="search-item-title">${escapeHtml(p.title)}</span>
-              <span class="search-item-meta">${new Date(p.date).toLocaleDateString('vi-VN')}${
-                p.tags.length ? ' · ' + p.tags.map(escapeHtml).join(', ') : ''
-              }</span>
-              ${p.description ? `<span class="search-item-desc">${escapeHtml(p.description)}</span>` : ''}
-            </a>`
-        )
+        .map((p) => {
+          const snip = p.body ? snippet(p.body, q) : '';
+          const desc = snip || p.description;
+          return `<a class="search-item" href="${p.url}">
+            <span class="search-item-title">${escapeHtml(p.title)}</span>
+            <span class="search-item-meta">${new Date(p.date).toLocaleDateString('vi-VN')}${
+              p.category.length ? ' · ' + p.category.map(escapeHtml).join(', ') : ''
+            }${p.tags.length ? ' · ' + p.tags.map(escapeHtml).join(', ') : ''}</span>
+            ${desc ? `<span class="search-item-desc">${highlight(desc, q)}</span>` : ''}
+          </a>`;
+        })
         .join('');
     }
-    function search(q: string) {
-      const query = q.trim().toLowerCase();
-      if (!query) {
-        results.innerHTML = '<p class="search-hint">Nhập từ khoá để tìm bài viết.</p>';
-        return;
-      }
-      render(
-        index.filter(
-          (p) =>
-            p.title.toLowerCase().includes(query) ||
-            p.description.toLowerCase().includes(query) ||
-            p.tags.some((t) => t.toLowerCase().includes(query))
-        )
-      );
-    }
-    const q = new URLSearchParams(location.search).get('q') || '';
-    input.value = q;
-    input.oninput = () => search(input.value);
-    search(q);
+
+    input.oninput = () => run(input.value);
+    run(initial);
   }
   initSearch();
   if (!(window as any).__searchInit) {

@@ -1,0 +1,37 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getAllPosts, getAllCategories, capitalize } from '../../utils';
+
+const posts = await getAllPosts();
+const cats = getAllCategories(posts);
+---
+
+<Base title="Chủ đề" description="Bài viết theo chủ đề.">
+  <div class="container">
+    <div class="page-wrap">
+      <h1 class="page-title">Chủ đề</h1>
+      <p class="page-sub">{cats.length} chủ đề</p>
+      <div class="tax-list">
+        {
+          cats.map((c) => (
+            <a href={`/category/${c.slug}/`}>
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.5L10 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z" />
+              </svg>
+              <span class="tax-name">{capitalize(c.name)}</span>
+              <span class="count">{c.count}</span>
+            </a>
+          ))
+        }
+      </div>
+    </div>
+  </div>
+</Base>

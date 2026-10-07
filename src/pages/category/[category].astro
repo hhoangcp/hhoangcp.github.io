@@ -2,29 +2,29 @@
 import type { GetStaticPaths } from 'astro';
 import Base from '../../layouts/Base.astro';
 import PostCard from '../../components/PostCard.astro';
-import { getAllPosts, slugify, prettyTag } from '../../utils';
+import { getAllPosts, slugify, capitalize } from '../../utils';
 
 export const getStaticPaths = (async () => {
   const posts = await getAllPosts();
   const map = new Map<string, { name: string; posts: typeof posts }>();
   for (const p of posts)
-    for (const t of p.data.tags) {
-      const slug = slugify(t);
+    for (const c of p.data.category) {
+      const slug = slugify(c);
       const entry = map.get(slug);
       if (entry) entry.posts.push(p);
-      else map.set(slug, { name: t, posts: [p] });
+      else map.set(slug, { name: c, posts: [p] });
     }
   return [...map.entries()].map(([slug, { name, posts }]) => ({
-    params: { tag: slug },
-    props: { tag: name, posts },
+    params: { category: slug },
+    props: { name, posts },
   }));
 }) satisfies GetStaticPaths;
 
-const { tag, posts } = Astro.props;
-const label = prettyTag(tag);
+const { name, posts } = Astro.props;
+const label = capitalize(name);
 ---
 
-<Base title={`Thẻ: ${label}`} description={`Bài viết gắn thẻ ${label}.`}>
+<Base title={`Chủ đề: ${label}`} description={`Bài viết thuộc chủ đề ${label}.`}>
   <div class="container">
     <div class="page-wrap">
       <h1 class="page-title">{label}</h1>

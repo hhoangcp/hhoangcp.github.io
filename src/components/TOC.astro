@@ -13,8 +13,23 @@ const items = headings.filter((h) => h.depth >= 2 && h.depth <= 4);
 
 {
   items.length > 0 && (
-    <aside class="post-toc">
-      <nav class="toc" aria-label="Mục lục">
+    <aside class="post-toc" id="post-toc" data-open="false">
+      <button class="toc-toggle" type="button" aria-expanded="false" aria-controls="toc-nav">
+        <span>Mục lục</span>
+        <svg
+          class="toc-chev"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </button>
+      <nav class="toc" id="toc-nav" aria-label="Mục lục">
         <div class="toc-title">Mục lục</div>
         <ul>
           {items.map((h) => (
@@ -27,3 +42,28 @@ const items = headings.filter((h) => h.depth >= 2 && h.depth <= 4);
     </aside>
   )
 }
+
+<script>
+  if (!(window as any).__tocInit) {
+    (window as any).__tocInit = true;
+    document.addEventListener('astro:page-load', () => {
+      const aside = document.getElementById('post-toc');
+      const btn = aside?.querySelector<HTMLButtonElement>('.toc-toggle');
+      if (!aside || !btn) return;
+      const close = () => {
+        aside.setAttribute('data-open', 'false');
+        btn.setAttribute('aria-expanded', 'false');
+      };
+      btn.addEventListener('click', () => {
+        const open = aside.getAttribute('data-open') === 'true';
+        aside.setAttribute('data-open', String(!open));
+        btn.setAttribute('aria-expanded', String(!open));
+      });
+      aside.querySelectorAll('.toc a').forEach((a) =>
+        a.addEventListener('click', () => {
+          if (window.innerWidth < 1000) close();
+        })
+      );
+    });
+  }
+</script>
