@@ -9,7 +9,11 @@ import icon from 'astro-icon';
 // kieu textstyle mac dinh cua KaTeX. Ap dung cho moi bai viet.
 const remarkDfrac = () => {
   const walk = (node) => {
-    if (node && (node.type === 'math' || node.type === 'inlineMath') && typeof node.value === 'string') {
+    if (
+      node &&
+      (node.type === 'math' || node.type === 'inlineMath') &&
+      typeof node.value === 'string'
+    ) {
       node.value = node.value.replace(/\\frac/g, '\\dfrac');
     }
     if (node && Array.isArray(node.children)) node.children.forEach(walk);
