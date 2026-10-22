@@ -8,7 +8,7 @@ category: [Tài nguyên]
 
 ## CSES Problem Set là gì
 
-[CSES Problem Set](https://cses.fi/problemset/) là bộ bài luyện thuật toán nổi tiếng, gồm khoảng 400 bài chia thành 18 chuyên mục — từ _Introductory Problems_ đến _Advanced Graph Problems_. Đề bài ngắn gọn, giới hạn rõ ràng, phủ gần như trọn chương trình luyện thi: mảng, sắp xếp, quy hoạch động, đồ thị, cây, toán, chuỗi, hình học và các kỹ thuật nâng cao. Đây là một trong những lộ trình luyện tập được cộng đồng competitive programming khuyên dùng nhiều nhất.
+[CSES Problem Set](https://cses.fi/problemset/) là bộ bài luyện thuật toán nổi tiếng, gồm khoảng 400 bài chia thành 18 chuyên mục — từ _Introductory Problems_ đến _Advanced Graph Problems_. Đề bài ngắn gọn, giới hạn rõ ràng, phủ gần như trọn chương trình luyện thi: mảng, sắp xếp, quy hoạch động, đồ thị, cây, toán, chuỗi, hình học và các kỹ thuật nâng cao. Bộ đề này được cộng đồng competitive programming nhắc tới thường xuyên như một lựa chọn luyện nền tảng.
 
 ## Repo có gì
 
