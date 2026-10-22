@@ -1,7 +1,7 @@
 ---
 title: Floor Sum — tính tổng hàm sàn bằng đệ quy kiểu Euclid
 date: 2026-10-22 11:45:00
-description: Tính nhanh tổng phần nguyên Σ⌊(ai+b)/c⌋ bằng đệ quy kiểu Euclid, độ phức tạp O(log).
+description: Thuật toán floor sum — tính tổng phần nguyên bằng đệ quy kiểu Euclid với độ phức tạp logarit.
 tags: [number-theory, floor-sum, euclidean, cpp]
 category: [Số học]
 ---
