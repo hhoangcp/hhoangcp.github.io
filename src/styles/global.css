@@ -866,10 +866,14 @@ html[data-theme='dark'] .icon-sun {
   text-decoration: none;
 }
 .toc-h3 a {
-  padding-left: 24px;
+  padding-left: 0;
+  font-size: 0.94em;
+  opacity: 0.9;
 }
 .toc-h4 a {
-  padding-left: 36px;
+  padding-left: 0;
+  font-size: 0.9em;
+  opacity: 0.8;
 }
 
 /* ===== Prose content ===== */
@@ -877,6 +881,58 @@ html[data-theme='dark'] .icon-sun {
   font-size: 1.02rem;
   color: var(--text);
 }
+/* Diagram (inline SVG) */
+.diagram {
+  max-width: 100%;
+  margin: 18px auto;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.diagram::-webkit-scrollbar {
+  height: 8px;
+}
+.diagram::-webkit-scrollbar-track {
+  background: transparent;
+}
+.diagram::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+.diagram::-webkit-scrollbar-thumb:hover {
+  background: var(--text-faint);
+}
+.diagram svg,
+.diagram img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.diagram-narrow {
+  max-width: 430px;
+}
+/* Animation: ngang cho màn ngang, dọc cho màn dọc */
+.diagram-anim {
+  max-width: 820px;
+}
+.diagram-anim.anim-portrait {
+  max-width: 440px;
+}
+.diagram-anim.anim-landscape {
+  display: none;
+}
+@media (min-width: 720px) and (min-aspect-ratio: 1/1) {
+  .diagram-anim.anim-portrait {
+    display: none;
+  }
+  .diagram-anim.anim-landscape {
+    display: block;
+    max-width: 820px;
+  }
+}
+
 .post-content > * + * {
   margin-top: 0.9em;
 }
