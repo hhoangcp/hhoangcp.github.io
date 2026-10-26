@@ -97,19 +97,31 @@ export function getRelatedPosts(
   posts: CollectionEntry<'posts'>[],
   n = 3
 ): CollectionEntry<'posts'>[] {
-  const tags = new Set(post.data.tags);
-  const scored = posts
-    .filter((p) => p.id !== post.id)
-    .map((p) => ({ p, score: p.data.tags.filter((t) => tags.has(t)).length }))
-    .sort((a, b) => b.score - a.score || b.p.data.date.getTime() - a.p.data.date.getTime());
-  const related = scored.filter((s) => s.score > 0).map((s) => s.p);
-  if (related.length >= n) return related.slice(0, n);
-  for (const s of scored) {
-    if (s.score > 0) continue;
-    related.push(s.p);
-    if (related.length >= n) break;
+  const others = posts.filter((p) => p.id !== post.id);
+  if (!others.length) return [];
+
+  // IDF: tag xuat hien o cang it bai thi cang "dac trung", trong so cang cao.
+  // Tag pho bien (xuat hien o moi bai) co trong so 0 va khong tinh diem.
+  const df = new Map<string, number>();
+  for (const p of posts) {
+    for (const t of p.data.tags) df.set(t, (df.get(t) ?? 0) + 1);
   }
-  return related.slice(0, n);
+  const weight = (t: string) => Math.log(posts.length / (df.get(t) ?? 1));
+
+  const myTags = new Set(post.data.tags);
+  const myCats = new Set(post.data.category);
+  const scored = others.map((p) => {
+    let score = 0;
+    for (const t of p.data.tags) if (myTags.has(t)) score += weight(t);
+    for (const c of p.data.category) if (myCats.has(c)) score += 1; // thuong cung category
+    return { p, score };
+  });
+
+  return scored
+    .filter((s) => s.score > 0)
+    .sort((a, b) => b.score - a.score || b.p.data.date.getTime() - a.p.data.date.getTime())
+    .slice(0, n)
+    .map((s) => s.p);
 }
 
 export function groupPostsByYear(
