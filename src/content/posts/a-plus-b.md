@@ -8,8 +8,6 @@ sourceUrl: https://oj.vnoi.info/problem/post
 tree: [co-ban, nen-tang]
 ---
 
-_Nên đọc kèm [Phân tích độ phức tạp](/posts/complexity-basics/) trước khi đi tiếp các bài còn lại của blog._
-
 ## Đề bài
 
 Cho hai số nguyên $A$ và $B$, hãy tính và in ra tổng $A + B$.
