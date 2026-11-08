@@ -1,0 +1,64 @@
+---
+import type { GetStaticPaths } from 'astro';
+import Base from '../../../../layouts/Base.astro';
+import PostCard from '../../../../components/PostCard.astro';
+import Pagination from '../../../../components/Pagination.astro';
+import { getAllPosts, slugify, prettyTag } from '../../../../utils';
+import { SITE } from '../../../../consts';
+
+export const getStaticPaths = (async () => {
+  const PAGE_SIZE = SITE.postsPerPage;
+  const posts = await getAllPosts();
+  const map = new Map<string, { name: string; posts: typeof posts }>();
+  for (const p of posts)
+    for (const t of p.data.tags) {
+      const slug = slugify(t);
+      const entry = map.get(slug);
+      if (entry) entry.posts.push(p);
+      else map.set(slug, { name: t, posts: [p] });
+    }
+  // Chỉ sinh route từ trang 2 trở đi; trang 1 do [tag].astro đảm nhiệm
+  const paths = [];
+  for (const [slug, { name, posts }] of map) {
+    const lastPage = Math.ceil(posts.length / PAGE_SIZE);
+    for (let n = 2; n <= lastPage; n++) {
+      paths.push({
+        params: { tag: slug, page: String(n) },
+        props: {
+          slug,
+          tag: name,
+          posts: posts.slice((n - 1) * PAGE_SIZE, n * PAGE_SIZE),
+          total: posts.length,
+          lastPage,
+          page: n,
+        },
+      });
+    }
+  }
+  return paths;
+}) satisfies GetStaticPaths;
+
+const { slug, tag, posts, total, lastPage, page } = Astro.props;
+const label = prettyTag(tag);
+---
+
+<Base title={`Thẻ: ${label} — trang ${page}`} description={`Bài viết gắn thẻ ${label}.`}>
+  <div class="container">
+    <div class="page-wrap">
+      <h1 class="page-title">{label}</h1>
+      <p class="page-sub">{total} bài viết</p>
+      <div class="post-list">
+        {posts.map((post) => (
+          <PostCard post={post} />
+        ))}
+      </div>
+      <Pagination
+        page={page}
+        lastPage={lastPage}
+        jumpPattern={`/tags/${slug}/page/{p}/`}
+        firstHref={`/tags/${slug}/`}
+        pageHref={(n) => (n === 1 ? `/tags/${slug}/` : `/tags/${slug}/page/${n}/`)}
+      />
+    </div>
+  </div>
+</Base>

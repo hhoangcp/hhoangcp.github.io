@@ -7,6 +7,10 @@ import Footer from '../components/Footer.astro';
 import Snow from '../components/effects/Snow.astro';
 import ClickRipple from '../components/effects/ClickRipple.astro';
 import BackToTop from '../components/BackToTop.astro';
+import MathKatexCss from '../components/MathKatexCss.astro';
+
+const MATH_ENGINE = (process.env.MATH_ENGINE || 'mathjax').toLowerCase();
+const MATH_CLIENT = (process.env.MATH_CLIENT ?? (MATH_ENGINE === 'mathjax' ? '1' : '0')) === '1';
 
 interface Props {
   title?: string;
@@ -28,6 +32,8 @@ const ogImage = new URL(image || '/avatar.jpg', Astro.site).href;
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="preload" as="image" href="/avatar.jpg" fetchpriority="high" />
+    <link rel="preload" as="image" href="/bg.jpg" fetchpriority="high" />
     <title>{fullTitle}</title>
     <meta name="description" content={desc} />
     <meta name="author" content={SITE.author} />
@@ -42,6 +48,57 @@ const ogImage = new URL(image || '/avatar.jpg', Astro.site).href;
     <meta name="twitter:description" content={desc} />
     <meta name="twitter:image" content={ogImage} />
     <ClientRouter />
+    {MATH_ENGINE === 'katex' && !MATH_CLIENT && <MathKatexCss />}
+    {MATH_ENGINE === 'katex' && MATH_CLIENT && (
+      <>
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/katex@0.19.1/dist/katex.min.css"
+        />
+        <script
+          is:inline
+          defer
+          src="https://cdn.jsdelivr.net/npm/katex@0.19.1/dist/contrib/auto-render.min.js"
+          onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});document.addEventListener('astro:page-load',function(){renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]})})"
+        ></script>
+      </>
+    )}
+    {MATH_ENGINE === 'mathjax' && MATH_CLIENT && (
+      <>
+        <script is:inline>
+          if (!window.__mjCfg) {
+            window.__mjCfg = true;
+            window.MathJax = {
+              tex: {
+                inlineMath: [
+                  ['$', '$'],
+                  ['\\(', '\\)'],
+                ],
+                displayMath: [
+                  ['$$', '$$'],
+                  ['\\[', '\\]'],
+                ],
+                processEscapes: true,
+              },
+              svg: { fontCache: 'global' },
+              options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+              },
+            };
+            document.addEventListener('astro:page-load', function () {
+              if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise();
+              }
+            });
+          }
+        </script>
+        <script
+          is:inline
+          defer
+          src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js"
+        ></script>
+      </>
+    )}
     <script is:inline>
       (function () {
         function apply(doc) {
@@ -225,6 +282,16 @@ const ogImage = new URL(image || '/avatar.jpg', Astro.site).href;
         document.addEventListener('astro:page-load', () => {
           wrapCode();
           wrapIO();
+        });
+        // Nút mở rộng/thu gọn code block dài
+        document.addEventListener('click', (e) => {
+          const btn = (e.target as HTMLElement)?.closest?.('.code-fold-btn');
+          if (!btn) return;
+          const fold = btn.closest('.code-fold');
+          if (!fold) return;
+          const open = fold.classList.toggle('open');
+          const n = (btn as HTMLElement).dataset.lines ?? '';
+          btn.textContent = open ? 'Thu gọn' : `Mở rộng code — ${n} dòng`;
         });
       }
     </script>

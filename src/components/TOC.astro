@@ -3,6 +3,7 @@ interface Heading {
   depth: number;
   slug: string;
   text: string;
+  html?: string;
 }
 interface Props {
   headings: Heading[];
@@ -11,37 +12,37 @@ const { headings = [] } = Astro.props;
 const items = headings.filter((h) => h.depth >= 2 && h.depth <= 4);
 ---
 
-{
-  items.length > 0 && (
-    <aside class="post-toc" id="post-toc" data-open="false">
-      <button class="toc-toggle" type="button" aria-expanded="false" aria-controls="toc-nav">
-        <span>Mục lục</span>
-        <svg
-          class="toc-chev"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          aria-hidden="true"
-        >
-          <path d="M6 9l6 6 6-6" />
-        </svg>
-      </button>
-      <nav class="toc" id="toc-nav" aria-label="Mục lục">
-        <div class="toc-title">Mục lục</div>
-        <ul>
-          {items.map((h) => (
-            <li class={`toc-h${h.depth}`}>
-              <a href={`#${h.slug}`}>{h.text}</a>
-            </li>
-          ))}
-        </ul>
-      </nav>
-    </aside>
-  )
-}
+{items.length > 0 && (
+  <aside class="post-toc" id="post-toc" data-open="false">
+    <button class="toc-toggle" type="button" aria-expanded="false" aria-controls="toc-nav">
+      <span>Mục lục</span>
+      <svg
+        class="toc-chev"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M6 9l6 6 6-6" />
+      </svg>
+    </button>
+    <nav class="toc" id="toc-nav" aria-label="Mục lục">
+      <div class="toc-title">Mục lục</div>
+      <ul>
+        {items.map((h) => (
+          <li class={`toc-h${h.depth}`}>
+            <a href={`#${h.slug}`}>
+              {h.html ? <span class="toc-entry" set:html={h.html} /> : h.text}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  </aside>
+)}
 
 <script>
   if (!(window as any).__tocInit) {

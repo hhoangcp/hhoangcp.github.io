@@ -3,7 +3,7 @@ title: Small-to-large và DSU on tree (Sack) — đếm màu trên cây con
 date: 2026-10-27 01:40:00
 description: So sánh small-to-large và DSU on tree (Sack) cho bài đếm màu trên cây con; code C++ và Python, độ phức tạp O(n log n).
 tags: [dsu-on-tree, tree, cses, cpp, python]
-category: [Kỹ thuật]
+tree: [do-thi, dp-tren-cay]
 ---
 
 ## Đề bài
@@ -36,6 +36,14 @@ Cách trực tiếp là với mỗi đỉnh lại DFS để gom màu trong cây 
 **C++:**
 
 ```cpp
+#include <bits/stdc++.h>
+
+using namespace std;
+
+typedef long long i64;
+const i64 MOD = 1e9 + 7;
+const int INF = 1e9 + 7;
+
 int n;
 vector<vector<int>> g;
 vector<int> col, ans, par;
@@ -62,6 +70,34 @@ vector<int> naive_solve() {
         ans[v] = (int)s.size();
     }
     return ans;
+}
+
+void solve() {
+    cin >> n;
+    g.assign(n + 1, {});
+    col.assign(n + 1, 0);
+    ans.assign(n + 1, 0);
+    par.assign(n + 1, 0);
+    for (int i = 1; i <= n; i++) cin >> col[i];
+    for (int i = 0; i < n - 1; i++) {
+        int u, v;
+        cin >> u >> v;
+        g[u].push_back(v);
+        g[v].push_back(u);
+    }
+    naive_solve();
+    for (int i = 1; i <= n; i++) cout << ans[i] << " \n"[i == n];
+}
+
+int main() {
+    ios_base::sync_with_stdio(0); cin.tie(NULL);
+
+    int t = 1; //cin >> t;
+    while (t--) {
+        solve();
+    }
+
+    return 0;
 }
 ```
 
@@ -105,6 +141,14 @@ Với `std::set` (cấu trúc có thứ tự), mỗi lần chèn tốn $O(\log n
 **C++:**
 
 ```cpp
+#include <bits/stdc++.h>
+
+using namespace std;
+
+typedef long long i64;
+const i64 MOD = 1e9 + 7;
+const int INF = 1e9 + 7;
+
 int n;
 vector<vector<int>> g;
 vector<int> col, ans;
@@ -123,6 +167,35 @@ void dfs(int v, int p) {
     }
     bag[v] = big;
     ans[v] = (int)big->size();
+}
+
+void solve() {
+    cin >> n;
+    g.assign(n + 1, {});
+    col.assign(n + 1, 0);
+    ans.assign(n + 1, 0);
+    bag.assign(n + 1, nullptr);
+    for (int i = 1; i <= n; i++) cin >> col[i];
+    for (int i = 0; i < n - 1; i++) {
+        int u, v;
+        cin >> u >> v;
+        g[u].push_back(v);
+        g[v].push_back(u);
+    }
+    dfs(1, 0);
+    for (int i = 1; i <= n; i++) cout << ans[i] << " \n"[i == n];
+    delete bag[1];
+}
+
+int main() {
+    ios_base::sync_with_stdio(0); cin.tie(NULL);
+
+    int t = 1; //cin >> t;
+    while (t--) {
+        solve();
+    }
+
+    return 0;
 }
 ```
 
@@ -146,6 +219,14 @@ C++ dùng `unordered_set`, Python dùng `set` — cả hai đều là **bảng b
 **C++:**
 
 ```cpp
+#include <bits/stdc++.h>
+
+using namespace std;
+
+typedef long long i64;
+const i64 MOD = 1e9 + 7;
+const int INF = 1e9 + 7;
+
 int n;
 vector<vector<int>> g;
 vector<int> col, ans;
@@ -164,6 +245,35 @@ void dfs(int v, int p) {
     }
     bag[v] = big;
     ans[v] = (int)big->size();
+}
+
+void solve() {
+    cin >> n;
+    g.assign(n + 1, {});
+    col.assign(n + 1, 0);
+    ans.assign(n + 1, 0);
+    bag.assign(n + 1, nullptr);
+    for (int i = 1; i <= n; i++) cin >> col[i];
+    for (int i = 0; i < n - 1; i++) {
+        int u, v;
+        cin >> u >> v;
+        g[u].push_back(v);
+        g[v].push_back(u);
+    }
+    dfs(1, 0);
+    for (int i = 1; i <= n; i++) cout << ans[i] << " \n"[i == n];
+    delete bag[1];
+}
+
+int main() {
+    ios_base::sync_with_stdio(0); cin.tie(NULL);
+
+    int t = 1; //cin >> t;
+    while (t--) {
+        solve();
+    }
+
+    return 0;
 }
 ```
 
@@ -338,6 +448,14 @@ Giữ mảng đếm `cnt[]` dùng chung và biến `distinct` — số màu đan
 **C++** — Sack đệ quy kiểu kinh điển; cộng/xoá cây con bằng cách đệ quy qua các con:
 
 ```cpp
+#include <bits/stdc++.h>
+
+using namespace std;
+
+typedef long long i64;
+const i64 MOD = 1e9 + 7;
+const int INF = 1e9 + 7;
+
 int n, distinct = 0;
 vector<vector<int>> g;
 vector<int> col, sz, bigChild, cnt, ans;
@@ -379,6 +497,38 @@ void dfs(int v, int p, bool keep) {
     ans[v] = distinct;
 
     if (!keep) add(v, p, -1);
+}
+
+void solve() {
+    cin >> n;
+    g.assign(n + 1, {});
+    col.assign(n + 1, 0);
+    sz.assign(n + 1, 0);
+    bigChild.assign(n + 1, 0);
+    cnt.assign(200001, 0);
+    ans.assign(n + 1, 0);
+    for (int i = 1; i <= n; i++) cin >> col[i];
+    for (int i = 0; i < n - 1; i++) {
+        int u, v;
+        cin >> u >> v;
+        g[u].push_back(v);
+        g[v].push_back(u);
+    }
+    distinct = 0;
+    getSize(1, 0);
+    dfs(1, 0, true);
+    for (int i = 1; i <= n; i++) cout << ans[i] << " \n"[i == n];
+}
+
+int main() {
+    ios_base::sync_with_stdio(0); cin.tie(NULL);
+
+    int t = 1; //cin >> t;
+    while (t--) {
+        solve();
+    }
+
+    return 0;
 }
 ```
 
@@ -455,6 +605,14 @@ Vì con luôn được thăm ngay sau cha và thăm hết trước khi sang nhá
 **C++ (biến thể Euler):**
 
 ```cpp
+#include <bits/stdc++.h>
+
+using namespace std;
+
+typedef long long i64;
+const i64 MOD = 1e9 + 7;
+const int INF = 1e9 + 7;
+
 int n, distinct = 0;
 int timer_ = 0;
 vector<vector<int>> g;
@@ -496,6 +654,42 @@ void dfs(int v, int p, bool keep) {
 
     if (!keep)
         for (int i = st[v]; i < ft[v]; ++i) add(ver[i], -1);
+}
+
+void solve() {
+    cin >> n;
+    g.assign(n + 1, {});
+    col.assign(n + 1, 0);
+    sz.assign(n + 1, 0);
+    bigChild.assign(n + 1, 0);
+    st.assign(n + 1, 0);
+    ft.assign(n + 1, 0);
+    ver.assign(n + 1, 0);
+    cnt.assign(200001, 0);
+    ans.assign(n + 1, 0);
+    for (int i = 1; i <= n; i++) cin >> col[i];
+    for (int i = 0; i < n - 1; i++) {
+        int u, v;
+        cin >> u >> v;
+        g[u].push_back(v);
+        g[v].push_back(u);
+    }
+    distinct = 0;
+    timer_ = 0;
+    build(1, 0);
+    dfs(1, 0, true);
+    for (int i = 1; i <= n; i++) cout << ans[i] << " \n"[i == n];
+}
+
+int main() {
+    ios_base::sync_with_stdio(0); cin.tie(NULL);
+
+    int t = 1; //cin >> t;
+    while (t--) {
+        solve();
+    }
+
+    return 0;
 }
 ```
 

@@ -12,21 +12,19 @@ const total = posts.length;
     <div class="page-wrap">
       <h1 class="page-title">Lưu trữ</h1>
       <p class="page-sub">{total} bài viết</p>
-      {
-        groups.map((g) => (
-          <section class="archive-group">
-            <h2 class="archive-year">{g.year}</h2>
-            <div class="archive-items">
-              {g.posts.map((p) => (
-                <div class="archive-item">
-                  <time datetime={p.data.date.toISOString()}>{formatDate(p.data.date)}</time>
-                  <a href={`/posts/${p.id}/`}>{p.data.title}</a>
-                </div>
-              ))}
-            </div>
-          </section>
-        ))
-      }
+      {groups.map((g) => (
+        <section class="archive-group">
+          <h2 class="archive-year">{g.year}</h2>
+          <div class="archive-items">
+            {g.posts.map((p) => (
+              <div class="archive-item">
+                <time datetime={p.data.date.toISOString()}>{formatDate(p.data.date)}</time>
+                <a href={`/posts/${p.id}/`}>{p.data.title}</a>
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
     </div>
   </div>
 </Base>

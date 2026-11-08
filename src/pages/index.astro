@@ -27,15 +27,15 @@ const recent = posts.slice(0, 3);
     <section class="home-section">
       <h2 class="home-section-title">Bài viết mới</h2>
       <div class="post-list">
-        {recent.map((post) => <PostCard post={post} />)}
+        {recent.map((post) => (
+          <PostCard post={post} />
+        ))}
       </div>
-      {
-        posts.length > recent.length && (
-          <a class="home-more" href="/posts/">
-            Xem tất cả bài viết →
-          </a>
-        )
-      }
+      {posts.length > recent.length && (
+        <a class="home-more" href="/posts/">
+          Xem tất cả bài viết →
+        </a>
+      )}
     </section>
   </div>
 </Base>

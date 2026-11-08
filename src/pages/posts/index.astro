@@ -16,11 +16,21 @@ const pageHref = (n: number) => (n === 1 ? '/posts/' : `/posts/page/${n}/`);
   <div class="container">
     <div class="page-wrap">
       <h1 class="page-title">Bài viết</h1>
-      <p class="page-sub">{all.length} bài viết · <a href="/archive/">Xem lưu trữ theo năm →</a></p>
+      <p class="page-sub">
+        {all.length} bài viết · <a href="/archive/">Xem lưu trữ theo năm →</a>
+      </p>
       <div class="post-list">
-        {posts.map((post) => <PostCard post={post} />)}
+        {posts.map((post) => (
+          <PostCard post={post} />
+        ))}
       </div>
-      <Pagination page={1} lastPage={lastPage} pageHref={pageHref} />
+      <Pagination
+        page={1}
+        lastPage={lastPage}
+        pageHref={pageHref}
+        jumpPattern={'/posts/page/{p}/'}
+        firstHref="/posts/"
+      />
     </div>
   </div>
 </Base>

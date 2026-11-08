@@ -1,9 +1,15 @@
 ---
 import Base from '../../layouts/Base.astro';
+import Pagination from '../../components/Pagination.astro';
 import { getAllPosts, getAllTags, prettyTag } from '../../utils';
+import { SITE } from '../../consts';
 
+const PAGE_SIZE = SITE.tagsPerPage;
 const posts = await getAllPosts();
 const tags = getAllTags(posts);
+const lastPage = Math.max(1, Math.ceil(tags.length / PAGE_SIZE));
+const page = 1;
+const pageHref = (n: number) => (n === 1 ? '/tags/' : `/tags/page/${n}/`);
 ---
 
 <Base title="Thẻ" description="Tất cả thẻ (tags).">
@@ -12,29 +18,34 @@ const tags = getAllTags(posts);
       <h1 class="page-title">Thẻ</h1>
       <p class="page-sub">{tags.length} thẻ</p>
       <div class="tax-list">
-        {
-          tags.map((t) => (
-            <a href={`/tags/${t.slug}/`}>
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                <>
-                  <path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
-                  <circle cx="7" cy="7" r="1.2" />
-                </>
-              </svg>
-              <span class="tax-name">{prettyTag(t.name)}</span>
-              <span class="count">{t.count}</span>
-            </a>
-          ))
-        }
+        {tags.slice(0, PAGE_SIZE).map((t) => (
+          <a href={`/tags/${t.slug}/`}>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <>
+                <path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+                <circle cx="7" cy="7" r="1.2" />
+              </>
+            </svg>
+            <span class="tax-name">{prettyTag(t.name)}</span>
+            <span class="count">{t.count}</span>
+          </a>
+        ))}
       </div>
+      <Pagination
+        page={page}
+        lastPage={lastPage}
+        jumpPattern="/tags/page/{p}/"
+        firstHref="/tags/"
+        pageHref={pageHref}
+      />
     </div>
   </div>
 </Base>

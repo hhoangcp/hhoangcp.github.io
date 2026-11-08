@@ -3,7 +3,7 @@ title: Floor Sum — tính tổng hàm sàn bằng đệ quy kiểu Euclid
 date: 2026-10-22 11:45:00
 description: Thuật toán floor sum — tính tổng phần nguyên bằng đệ quy kiểu Euclid với độ phức tạp logarit.
 tags: [number-theory, floor-sum, euclidean, cpp, python]
-category: [Số học]
+tree: [toan-hoc, so-hoc-co-ban]
 ---
 
 ## Đề bài
@@ -68,9 +68,13 @@ Hai bước đệ quy luân phiên đúng như thuật Euclid: bước tách ph�
 
 ```cpp
 #include <bits/stdc++.h>
+
 using namespace std;
 
-using i64 = long long;
+typedef long long i64;
+const i64 MOD = 1e9 + 7;
+const int INF = 1e9 + 7;
+
 using i128 = __int128_t;
 
 // sum_{i=0}^{n} floor((a*i + b) / c), voi c >= 1
@@ -83,6 +87,26 @@ i128 floorSum(int a, int b, int c, i64 n) {
     i64 M = (i64)(((i128)a * n + b) / c);
     if (M == 0) return 0; // a*n + b < c: moi so hang deu bang 0
     return (i128)n * M - floorSum(c, c - b - 1, a, M - 1);
+}
+
+void solve() {
+    // ví dụ nhỏ tự kiểm: sum_{i=0}^{7} floor(i/2) = 0+0+1+1+2+2+3+3 = 12
+    cout << (i64)floorSum(1, 0, 2, 7) << '\n';
+    // sum_{i=0}^{5} floor((2i+3)/5) = 0+1+1+1+2+2 = 7
+    cout << (i64)floorSum(2, 3, 5, 5) << '\n';
+    // a = 0: mọi số hạng bằng floor(b/c), (n+1)*floor(7/3) = 5*2 = 10
+    cout << (i64)floorSum(0, 7, 3, 4) << '\n';
+}
+
+int main() {
+    ios_base::sync_with_stdio(0); cin.tie(NULL);
+
+    int t = 1; //cin >> t;
+    while (t--) {
+        solve();
+    }
+
+    return 0;
 }
 ```
 

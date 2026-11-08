@@ -6,10 +6,12 @@
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
-    "build": "astro build",
+    "build": "./scripts/build.sh",
     "preview": "astro preview",
     "astro": "astro",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "build:fast": "astro build",
+    "build:server": "astro build"
   },
   "dependencies": {
     "@astrojs/markdown-remark": "^7.3.2",
@@ -20,7 +22,10 @@
     "astro": "^7.2.0",
     "astro-icon": "^1.1.5",
     "cursor-effects": "^1.0.18",
+    "hast-util-to-html": "^9.0.5",
+    "katex": "^0.19.1",
     "oh-my-live2d": "^0.19.3",
+    "rehype-katex": "^7.0.1",
     "rehype-mathjax": "^7.1.0",
     "remark-math": "^6.0.0"
   },

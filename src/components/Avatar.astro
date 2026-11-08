@@ -11,11 +11,12 @@ const initial = (SITE.author.charAt(0) || 'H').toUpperCase();
 <div class={`avatar ${className}`} style={`--sz:${size}px`}>
   <span class="avatar-fallback">{initial}</span>
   <img
-    src="/avatar.webp"
+    src="/avatar.jpg"
     alt={SITE.author}
-    loading="lazy"
-    decoding="async"
-    onerror="var a=['/avatar.jpg','/avatar.jpeg','/avatar.png'];var i=+(this.dataset.i||0)+1;this.dataset.i=i;if(i<=a.length){this.src=a[i-1];}else{this.style.display='none';}"
+    loading="eager"
+    fetchpriority="high"
+    decoding="sync"
+    onerror="var a=['/avatar.jpeg','/avatar.png'];var i=+(this.dataset.i||0)+1;this.dataset.i=i;if(i<=a.length){this.src=a[i-1];}else{this.style.display='none';}"
   />
 </div>
 

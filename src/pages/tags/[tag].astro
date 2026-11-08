@@ -2,9 +2,12 @@
 import type { GetStaticPaths } from 'astro';
 import Base from '../../layouts/Base.astro';
 import PostCard from '../../components/PostCard.astro';
+import Pagination from '../../components/Pagination.astro';
 import { getAllPosts, slugify, prettyTag } from '../../utils';
+import { SITE } from '../../consts';
 
 export const getStaticPaths = (async () => {
+  const PAGE_SIZE = SITE.postsPerPage;
   const posts = await getAllPosts();
   const map = new Map<string, { name: string; posts: typeof posts }>();
   for (const p of posts)
@@ -14,13 +17,16 @@ export const getStaticPaths = (async () => {
       if (entry) entry.posts.push(p);
       else map.set(slug, { name: t, posts: [p] });
     }
-  return [...map.entries()].map(([slug, { name, posts }]) => ({
-    params: { tag: slug },
-    props: { tag: name, posts },
-  }));
+  return [...map.entries()].map(([slug, { name, posts }]) => {
+    const lastPage = Math.max(1, Math.ceil(posts.length / PAGE_SIZE));
+    return {
+      params: { tag: slug },
+      props: { slug, tag: name, posts: posts.slice(0, PAGE_SIZE), total: posts.length, lastPage },
+    };
+  });
 }) satisfies GetStaticPaths;
 
-const { tag, posts } = Astro.props;
+const { slug, tag, posts, total, lastPage } = Astro.props;
 const label = prettyTag(tag);
 ---
 
@@ -28,10 +34,19 @@ const label = prettyTag(tag);
   <div class="container">
     <div class="page-wrap">
       <h1 class="page-title">{label}</h1>
-      <p class="page-sub">{posts.length} bài viết</p>
+      <p class="page-sub">{total} bài viết</p>
       <div class="post-list">
-        {posts.map((post) => <PostCard post={post} />)}
+        {posts.map((post) => (
+          <PostCard post={post} />
+        ))}
       </div>
+      <Pagination
+        page={1}
+        lastPage={lastPage}
+        jumpPattern={`/tags/${slug}/page/{p}/`}
+        firstHref={`/tags/${slug}/`}
+        pageHref={(n) => (n === 1 ? `/tags/${slug}/` : `/tags/${slug}/page/${n}/`)}
+      />
     </div>
   </div>
 </Base>

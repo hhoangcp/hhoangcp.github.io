@@ -1,37 +1,385 @@
 ---
 import Base from '../../layouts/Base.astro';
-import { getAllPosts, getAllCategories, capitalize } from '../../utils';
+import { getAllPosts, formatDate } from '../../utils';
+import {
+  TREE_BRANCHES,
+  TREE_NODE_TITLES,
+  TREE_NODE_ORDER,
+  TREE_PATH_TITLES,
+  TREE_UNASSIGNED,
+} from '../../data/tree';
+import type { CollectionEntry } from 'astro:content';
 
-const posts = await getAllPosts();
-const cats = getAllCategories(posts);
+type Post = CollectionEntry<'posts'>;
+type Node = {
+  slug: string;
+  path: string;
+  title: string;
+  children: Map<string, Node>;
+  posts: Post[];
+};
+
+const all = await getAllPosts();
+
+const titleOf = (path: string, slug: string) =>
+  TREE_PATH_TITLES[path] ?? TREE_NODE_TITLES[slug] ?? slug.replace(/[-_]+/g, ' ').trim();
+
+const makeNode = (slug: string, parentPath = ''): Node => {
+  const path = parentPath ? `${parentPath}/${slug}` : slug;
+  return {
+    slug,
+    path,
+    title: titleOf(path, slug),
+    children: new Map(),
+    posts: [],
+  };
+};
+
+const root = makeNode('');
+const branchOrder = new Map(TREE_BRANCHES.map((b, i) => [b.slug, i]));
+const nodeOrder = (parent: Node) => {
+  const order = TREE_NODE_ORDER[parent.slug] ?? [];
+  const idx = new Map(order.map((s, i) => [s, i]));
+  return (a: Node, b: Node) =>
+    (idx.get(a.slug) ?? 999) - (idx.get(b.slug) ?? 999) || a.slug.localeCompare(b.slug);
+};
+
+for (const p of all) {
+  const path: string[] = Array.isArray(p.data.tree) ? p.data.tree : [];
+  if (path.length === 0) {
+    const un = root.children.get(TREE_UNASSIGNED.slug) ?? makeNode(TREE_UNASSIGNED.slug);
+    un.posts.push(p);
+    root.children.set(un.slug, un);
+    continue;
+  }
+  let cur = root;
+  for (const seg of path) {
+    let next = cur.children.get(seg);
+    if (!next) {
+      next = makeNode(seg, cur === root ? '' : cur.path);
+      cur.children.set(seg, next);
+    }
+    cur = next;
+  }
+  cur.posts.push(p);
+}
+
+// Cấp 1: theo thứ tự khai báo; node lạ đứng sau; "Chưa phân loại" cuối cùng.
+const branches = [...root.children.values()].sort((a, b) => {
+  const ia = branchOrder.get(a.slug) ?? 999;
+  const ib = branchOrder.get(b.slug) ?? 999;
+  if (a.slug === TREE_UNASSIGNED.slug) return 1;
+  if (b.slug === TREE_UNASSIGNED.slug) return -1;
+  return ia - ib || a.slug.localeCompare(b.slug);
+});
+
+const branchTitle = (n: Node) => TREE_BRANCHES.find((b) => b.slug === n.slug)?.title ?? n.title;
+
+// Trong mỗi node: bài theo ngày tăng dần (thứ tự đọc).
+const byDate = (a: Post, b: Post) => a.data.date.getTime() - b.data.date.getTime();
+const countPosts = (n: Node): number =>
+  n.posts.length + [...n.children.values()].reduce((s, c) => s + countPosts(c), 0);
+
+const esc = (s: string) =>
+  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 ---
 
-<Base title="Chủ đề" description="Bài viết theo chủ đề.">
+<Base
+  title="Chủ đề"
+  description="Toàn bộ bài viết theo cây kiến thức — học từ nền tảng lên nâng cao, gắn nhãn đã đọc để theo dõi tiến độ."
+>
   <div class="container">
     <div class="page-wrap">
       <h1 class="page-title">Chủ đề</h1>
-      <p class="page-sub">{cats.length} chủ đề</p>
-      <div class="tax-list">
-        {
-          cats.map((c) => (
-            <a href={`/category/${c.slug}/`}>
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.5L10 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z" />
-              </svg>
-              <span class="tax-name">{capitalize(c.name)}</span>
-              <span class="count">{c.count}</span>
-            </a>
-          ))
-        }
+      <p class="page-sub">
+        {all.length} bài viết · nhấn nhánh để mở · đánh dấu
+        <span class="tree-hint-dot" aria-hidden="true"></span> để theo dõi đã đọc
+      </p>
+
+      <div class="tree">
+        {branches.map((b) => (
+          <details class="tree-branch" open>
+            <summary>
+              <span class="tree-branch-title">{branchTitle(b)}</span>
+              <span class="tree-count" data-count-for={b.slug}>
+                {countPosts(b)}
+              </span>
+            </summary>
+            <div class="tree-branch-body">
+              {[...b.children.values()].sort(nodeOrder(b)).map((n) => (
+                <details class="tree-node">
+                  <summary>
+                    <span class="tree-node-title">{n.title}</span>
+                    <span class="tree-count" data-count-for={`${b.slug}/${n.slug}`}>
+                      {countPosts(n)}
+                    </span>
+                  </summary>
+                  <ul class="tree-post-list">
+                    {n.posts
+                      .slice()
+                      .sort(byDate)
+                      .map((p) => (
+                        <li class="tree-post" data-slug={p.id}>
+                          <button
+                            class="tree-read"
+                            type="button"
+                            title="Đánh dấu đã đọc"
+                            aria-label="Đánh dấu đã đọc"
+                          ></button>
+                          <a class="tree-post-link" href={`/posts/${p.id}/`}>
+                            {p.data.title}
+                          </a>
+                          <span class="tree-date">{formatDate(p.data.date)}</span>
+                        </li>
+                      ))}
+                    {[...n.children.values()].map((sub) => (
+                      <li class="tree-sub">
+                        <span class="tree-sub-title">{sub.title}</span>
+                        <ul class="tree-post-list">
+                          {sub.posts
+                            .slice()
+                            .sort(byDate)
+                            .map((p) => (
+                              <li class="tree-post" data-slug={p.id}>
+                                <button
+                                  class="tree-read"
+                                  type="button"
+                                  title="Đánh dấu đã đọc"
+                                  aria-label="Đánh dấu đã đọc"
+                                ></button>
+                                <a class="tree-post-link" href={`/posts/${p.id}/`}>
+                                  {p.data.title}
+                                </a>
+                                <span class="tree-date">{formatDate(p.data.date)}</span>
+                              </li>
+                            ))}
+                        </ul>
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              ))}
+              {b.posts.length > 0 && (
+                <ul class="tree-post-list tree-post-list-root">
+                  {b.posts
+                    .slice()
+                    .sort(byDate)
+                    .map((p) => (
+                      <li class="tree-post" data-slug={p.id}>
+                        <button
+                          class="tree-read"
+                          type="button"
+                          title="Đánh dấu đã đọc"
+                          aria-label="Đánh dấu đã đọc"
+                        ></button>
+                        <a class="tree-post-link" href={`/posts/${p.id}/`}>
+                          {p.data.title}
+                        </a>
+                        <span class="tree-date">{formatDate(p.data.date)}</span>
+                      </li>
+                    ))}
+                </ul>
+              )}
+            </div>
+          </details>
+        ))}
       </div>
     </div>
   </div>
 </Base>
+
+<style>
+  .tree {
+    margin: 2em 0;
+  }
+  .tree-branch {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin: 0.7em 0;
+    overflow: hidden;
+    background: var(--bg);
+  }
+  .tree-branch > summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 13px 16px;
+    cursor: pointer;
+    user-select: none;
+    list-style: none;
+    font-weight: 700;
+    font-size: 1.02rem;
+    transition: background 0.15s ease;
+  }
+  .tree-branch > summary::-webkit-details-marker {
+    display: none;
+  }
+  .tree-branch > summary:hover {
+    background: var(--bg-soft);
+  }
+  .tree-branch-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .tree-branch-title::before {
+    content: '▸';
+    display: inline-block;
+    font-size: 0.8rem;
+    transition: transform 0.15s ease;
+    color: var(--text-soft);
+  }
+  .tree-branch[open] > summary .tree-branch-title::before {
+    transform: rotate(90deg);
+  }
+  .tree-count {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--text-soft);
+    background: rgba(127, 127, 127, 0.14);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 2px 10px;
+    white-space: nowrap;
+  }
+  .tree-branch-body {
+    padding: 4px 10px 10px;
+  }
+  .tree-node {
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    margin: 0.5em 0;
+    background: var(--bg-soft);
+  }
+  .tree-node > summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 12px;
+    cursor: pointer;
+    user-select: none;
+    list-style: none;
+    font-weight: 600;
+    font-size: 0.92rem;
+  }
+  .tree-node > summary::-webkit-details-marker {
+    display: none;
+  }
+  .tree-node > summary:hover {
+    background: var(--bg);
+    border-radius: 9px;
+  }
+  .tree-node-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .tree-node-title::before {
+    content: '▸';
+    display: inline-block;
+    font-size: 0.72rem;
+    transition: transform 0.15s ease;
+    color: var(--text-soft);
+  }
+  .tree-node[open] > summary .tree-node-title::before {
+    transform: rotate(90deg);
+  }
+  .tree-post-list {
+    list-style: none;
+    margin: 0;
+    padding: 2px 6px 8px 16px;
+  }
+  .tree-post-list-root {
+    padding: 6px;
+  }
+  .tree-post {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 5px 8px;
+    border-radius: 7px;
+    transition: background 0.12s ease;
+  }
+  .tree-post:hover {
+    background: var(--bg);
+  }
+  .tree-read {
+    flex: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border-strong);
+    background: transparent;
+    cursor: pointer;
+    padding: 0;
+    transition:
+      background 0.15s ease,
+      border-color 0.15s ease;
+  }
+  .tree-read:hover {
+    border-color: var(--accent, #4f8cc9);
+  }
+  .tree-post.read .tree-read {
+    background: var(--accent, #4f8cc9);
+    border-color: var(--accent, #4f8cc9);
+  }
+  .tree-post.read .tree-post-link {
+    color: var(--text-soft);
+  }
+  .tree-post-link {
+    flex: 1;
+    text-decoration: none;
+    font-size: 0.92rem;
+    line-height: 1.45;
+  }
+  .tree-date {
+    flex: none;
+    font-size: 0.72rem;
+    color: var(--text-soft);
+  }
+  .tree-sub {
+    margin: 4px 0;
+  }
+  .tree-sub-title {
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: var(--text-soft);
+    display: block;
+    padding: 4px 8px;
+  }
+  .tree-hint-dot {
+    display: inline-block;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border-strong);
+    vertical-align: middle;
+  }
+</style>
+
+<script>
+  const KEY = 'tree-read';
+  const read = new Set<string>(JSON.parse(localStorage.getItem(KEY) || '[]'));
+
+  const posts = document.querySelectorAll<HTMLElement>('.tree-post');
+  const save = () => localStorage.setItem(KEY, JSON.stringify([...read]));
+
+  for (const el of posts) {
+    const slug = el.dataset.slug!;
+    if (read.has(slug)) el.classList.add('read');
+    const btn = el.querySelector<HTMLButtonElement>('.tree-read');
+    btn?.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (read.has(slug)) {
+        read.delete(slug);
+        el.classList.remove('read');
+      } else {
+        read.add(slug);
+        el.classList.add('read');
+      }
+      save();
+    });
+  }
+</script>

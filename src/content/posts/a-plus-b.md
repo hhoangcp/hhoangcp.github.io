@@ -5,8 +5,10 @@ description: Bài mẫu A + B — đọc hai số nguyên và in ra tổng, kèm
 tags: [cpp, python, implementation]
 source: VNOJ — A cộng B
 sourceUrl: https://oj.vnoi.info/problem/post
-category: [Cơ bản]
+tree: [co-ban, nen-tang]
 ---
+
+_Nên đọc kèm [Phân tích độ phức tạp](/posts/complexity-basics/) trước khi đi tiếp các bài còn lại của blog._
 
 ## Đề bài
 
@@ -36,12 +38,28 @@ Một số nguyên: tổng $A + B$.
 
 ```cpp
 #include <bits/stdc++.h>
+
 using namespace std;
 
-int main() {
+typedef long long i64;
+const i64 MOD = 1e9 + 7;
+const int INF = 1e9 + 7;
+
+void solve() {
+
     int a, b;
     cin >> a >> b;
     cout << a + b << '\n';
+}
+
+int main() {
+    ios_base::sync_with_stdio(0); cin.tie(NULL);
+
+    int t = 1; //cin >> t;
+    while (t--) {
+        solve();
+    }
+
     return 0;
 }
 ```

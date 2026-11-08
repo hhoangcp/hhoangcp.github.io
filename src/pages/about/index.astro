@@ -49,26 +49,26 @@ const interests = [
       <section class="about-section">
         <h2 class="about-section-title">Lĩnh vực quan tâm</h2>
         <div class="interest-chips">
-          {interests.map((t) => <span class="interest-chip">{t}</span>)}
+          {interests.map((t) => (
+            <span class="interest-chip">{t}</span>
+          ))}
         </div>
       </section>
 
       <section class="about-section">
         <h2 class="about-section-title">Liên hệ</h2>
         <div class="about-contact">
-          {
-            SOCIAL.map((s) => (
-              <a
-                class="about-contact-link"
-                href={s.href}
-                target={s.href.startsWith('http') ? '_blank' : undefined}
-                rel={s.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-              >
-                <Icon name={iconMap[s.icon]} />
-                <span>{s.label}</span>
-              </a>
-            ))
-          }
+          {SOCIAL.map((s) => (
+            <a
+              class="about-contact-link"
+              href={s.href}
+              target={s.href.startsWith('http') ? '_blank' : undefined}
+              rel={s.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+            >
+              <Icon name={iconMap[s.icon]} />
+              <span>{s.label}</span>
+            </a>
+          ))}
         </div>
       </section>
     </div>

@@ -5,6 +5,7 @@ export const SITE = {
   url: 'https://hhoangcp.github.io',
   lang: 'vi',
   postsPerPage: 10,
+  tagsPerPage: 60,
   rss: '/rss.xml',
   nav: [
     { label: 'Trang chủ', href: '/' },

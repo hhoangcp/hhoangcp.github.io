@@ -11,21 +11,21 @@ const iconMap: Record<string, string> = {
 
 <footer class="site-footer">
   <div class="container footer-inner">
-    <div class="footer-copy">© {year} {SITE.author} · Built with Astro</div>
+    <div class="footer-copy">
+      © {year} {SITE.author} · Built with Astro
+    </div>
     <div class="footer-links">
-      {
-        SOCIAL.map((s) => (
-          <a
-            class="footer-link"
-            href={s.href}
-            aria-label={s.label}
-            target={s.href.startsWith('http') ? '_blank' : undefined}
-            rel={s.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-          >
-            <Icon name={iconMap[s.icon]} />
-          </a>
-        ))
-      }
+      {SOCIAL.map((s) => (
+        <a
+          class="footer-link"
+          href={s.href}
+          aria-label={s.label}
+          target={s.href.startsWith('http') ? '_blank' : undefined}
+          rel={s.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+        >
+          <Icon name={iconMap[s.icon]} />
+        </a>
+      ))}
       <a class="footer-link" href={SITE.rss} aria-label="RSS">
         <Icon name="mdi:rss" />
       </a>

@@ -1,30 +1,109 @@
 ---
+import { paginationItems } from '../pagination-items';
 interface Props {
-  page: number;
-  lastPage: number;
-  pageHref: (n: number) => string;
+  page: number; // trang hiện tại (bắt đầu từ 1)
+  lastPage: number; // tổng số trang
+  pageHref: (n: number) => string; // sinh URL cho link render sẵn ở server
+  jumpPattern: string; // mẫu URL có '{p}' cho script client-side
+  firstHref: string; // URL của trang 1 (không luôn khớp pattern)
 }
-const { page, lastPage, pageHref } = Astro.props;
+const { page, lastPage, pageHref, jumpPattern, firstHref } = Astro.props;
+const items = paginationItems(page, lastPage);
 ---
 
-{
-  lastPage > 1 && (
-    <nav class="pagination" aria-label="Phân trang">
-      {page > 1 && (
-        <a href={pageHref(page - 1)} rel="prev">
-          ← Trước
+<nav class="pagination" aria-label="Phân trang">
+  <div class="pg-pages">
+    {page > 1 ? (
+      <a class="pg-edge" href={pageHref(1)}>
+        Đầu
+      </a>
+    ) : (
+      <span class="pg-edge is-disabled" aria-disabled="true">
+        Đầu
+      </span>
+    )}
+    {page > 1 ? (
+      <a class="pg-prev" href={pageHref(page - 1)} rel="prev">
+        ← Trước
+      </a>
+    ) : (
+      <span class="pg-prev is-disabled" aria-disabled="true">
+        ← Trước
+      </span>
+    )}
+    {items.map((item) =>
+      typeof item === 'number' ? (
+        <a href={pageHref(item)} class={item === page ? 'active' : ''}>
+          {item}
         </a>
-      )}
-      {Array.from({ length: lastPage }, (_, i) => i + 1).map((n) => (
-        <a href={pageHref(n)} class={n === page ? 'active' : ''}>
-          {n}
-        </a>
-      ))}
-      {page < lastPage && (
-        <a href={pageHref(page + 1)} rel="next">
-          Sau →
-        </a>
-      )}
-    </nav>
-  )
-}
+      ) : (
+        <span class="pg-ellipsis" aria-hidden="true">
+          …
+        </span>
+      )
+    )}
+    {page < lastPage ? (
+      <a class="pg-next" href={pageHref(page + 1)} rel="next">
+        Sau →
+      </a>
+    ) : (
+      <span class="pg-next is-disabled" aria-disabled="true">
+        Sau →
+      </span>
+    )}
+    {page < lastPage ? (
+      <a class="pg-edge" href={pageHref(lastPage)}>
+        Cuối
+      </a>
+    ) : (
+      <span class="pg-edge is-disabled" aria-disabled="true">
+        Cuối
+      </span>
+    )}
+  </div>
+  <form
+    class="pg-jump"
+    data-jump-pattern={jumpPattern}
+    data-jump-first={firstHref}
+    data-jump-last={String(lastPage)}
+  >
+    <label class="pg-jump-label" for="pg-jump">
+      Trang
+    </label>
+    <input
+      class="pg-jump-input"
+      id="pg-jump"
+      type="number"
+      name="p"
+      min="1"
+      max={lastPage}
+      value={String(page)}
+      aria-label="Nhập số trang"
+      inputmode="numeric"
+    />
+    <span class="pg-jump-total">/ {lastPage}</span>
+    <button class="pg-jump-btn" type="submit">
+      Đến
+    </button>
+  </form>
+</nav>
+
+<script>
+  if (!(window as any).__pgJumpInit) {
+    (window as any).__pgJumpInit = true;
+    document.addEventListener('submit', (ev) => {
+      const form = (ev.target as HTMLElement | null)?.closest?.(
+        '.pg-jump'
+      ) as HTMLFormElement | null;
+      if (!form) return;
+      ev.preventDefault();
+      const pattern = form.dataset.jumpPattern || '';
+      const first = form.dataset.jumpFirst || pattern.replace('{p}', '1');
+      const last = Number(form.dataset.jumpLast || '1');
+      const raw = Number(new FormData(form).get('p'));
+      if (!Number.isFinite(raw)) return;
+      const n = Math.min(Math.max(1, Math.round(raw)), last);
+      window.location.href = n <= 1 ? first : pattern.replace('{p}', String(n));
+    });
+  }
+</script>

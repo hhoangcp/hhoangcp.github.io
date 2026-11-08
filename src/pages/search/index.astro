@@ -13,37 +13,55 @@ import Base from '../../layouts/Base.astro';
           placeholder="Tìm theo tiêu đề, mô tả, thẻ, nội dung…"
           autocomplete="off"
         />
+        <label
+          class="search-full-toggle"
+          title="Tìm trong toàn bộ nội dung bài viết (chậm hơn một chút)"
+        >
+          <input type="checkbox" id="search-full" />
+          Tìm cả trong nội dung
+        </label>
       </div>
       <p class="search-stats" id="search-stats"></p>
+      <div id="search-facets" class="search-facets"></div>
       <div id="search-results" class="search-results"></div>
+      <div id="search-pagination"></div>
     </div>
   </div>
 </Base>
 
 <script>
-  type IndexItem = {
-    title: string;
-    description: string;
-    tags: string[];
-    category: string[];
-    url: string;
-    date: string;
-    body: string;
-  };
+  import { paginationItems } from '../../pagination-items';
+  import { searchTokens, searchDocs, highlightTokens, type SearchDoc } from '../../search-core';
+
+  // = SITE.postsPerPage trong src/consts.ts
+  const PAGE_SIZE = 10;
+  // Số chip tag hiển thị theo facets của bộ kết quả
+  const MAX_CHIPS = 10;
 
   async function initSearch() {
     const input = document.getElementById('search-input') as HTMLInputElement | null;
+    const fullToggle = document.getElementById('search-full') as HTMLInputElement | null;
     const results = document.getElementById('search-results');
+    const pagination = document.getElementById('search-pagination');
     const stats = document.getElementById('search-stats');
-    if (!input || !results) return;
+    const facetsEl = document.getElementById('search-facets');
+    if (!input || !results || !pagination || !facetsEl) return;
 
-    let index: IndexItem[] = [];
+    let light: SearchDoc[] = [];
+    let full: SearchDoc[] | null = null;
     let indexPromise: Promise<void> | null = null;
-    const initial = new URLSearchParams(location.search).get('q') || '';
-    input.value = initial;
+    let fullPromise: Promise<void> | null = null;
+
+    let page = 1;
+    let tokens: string[] = [];
+    let textMatched: { p: SearchDoc; score: number }[] = [];
+    let activeTags = new Set<string>();
+    let activeCats = new Set<string>();
+
+    const docs = () => full ?? light;
 
     async function ensureIndex() {
-      if (index.length) return;
+      if (light.length) return;
       if (indexPromise) {
         await indexPromise;
         return;
@@ -51,40 +69,83 @@ import Base from '../../layouts/Base.astro';
       indexPromise = (async () => {
         try {
           const res = await fetch('/search/index.json');
-          index = (await res.json()) as IndexItem[];
+          light = (await res.json()) as SearchDoc[];
         } catch {
-          index = [];
+          light = [];
         }
       })();
       await indexPromise;
     }
 
-    async function run(q: string) {
-      if (!q.trim()) {
+    async function ensureFull() {
+      if (full) return;
+      if (fullPromise) {
+        await fullPromise;
+        return;
+      }
+      fullPromise = (async () => {
+        try {
+          const res = await fetch('/search/index-full.json');
+          full = (await res.json()) as SearchDoc[];
+        } catch {
+          full = null;
+        }
+      })();
+      await fullPromise;
+    }
+
+    // ===== URL state (?q=&tags=&cat=&full=) — shareable, back/forward =====
+    function readState() {
+      const u = new URLSearchParams(location.search);
+      input.value = u.get('q') || '';
+      if (fullToggle) {
+        fullToggle.checked = u.get('full') === '1';
+        if (fullToggle.checked) void ensureFull();
+      }
+      activeTags = new Set((u.get('tags') || '').split(',').filter(Boolean));
+      activeCats = new Set((u.get('cat') || '').split(',').filter(Boolean));
+    }
+    function writeState() {
+      const u = new URLSearchParams();
+      if (input.value.trim()) u.set('q', input.value.trim());
+      if (fullToggle?.checked) u.set('full', '1');
+      if (activeTags.size) u.set('tags', [...activeTags].join(','));
+      if (activeCats.size) u.set('cat', [...activeCats].join(','));
+      const s = u.toString();
+      history.replaceState(null, '', s ? `?${s}` : location.pathname);
+    }
+
+    async function run() {
+      const q = input.value.trim();
+      if (!q) {
+        tokens = [];
+        textMatched = [];
+        page = 1;
+        facetsEl.innerHTML = '';
         results.innerHTML = '';
+        pagination.innerHTML = '';
         if (stats) stats.textContent = '';
         return;
       }
-      if (!index.length) {
+      if (!light.length) {
         results.innerHTML = '<p class="search-hint">Đang tải chỉ mục tìm kiếm…</p>';
         if (stats) stats.textContent = '';
       }
       await ensureIndex();
-      if (!index.length) {
+      if (fullToggle?.checked && !full) {
+        results.innerHTML = '<p class="search-hint">Đang tải chỉ mục nội dung đầy đủ…</p>';
+        await ensureFull();
+      }
+      if (!light.length) {
         results.innerHTML = '<p class="search-empty">Không tải được chỉ mục tìm kiếm.</p>';
+        pagination.innerHTML = '';
+        facetsEl.innerHTML = '';
         return;
       }
-      const query = q.trim().toLowerCase();
-      const matched = index.filter(
-        (p) =>
-          p.title.toLowerCase().includes(query) ||
-          p.description.toLowerCase().includes(query) ||
-          p.tags.some((t) => t.toLowerCase().includes(query)) ||
-          p.category.some((c) => c.toLowerCase().includes(query)) ||
-          p.body.toLowerCase().includes(query)
-      );
-      if (stats) stats.textContent = `${matched.length} kết quả`;
-      render(matched, q.trim());
+      tokens = searchTokens(q);
+      textMatched = searchDocs(docs(), tokens);
+      page = 1;
+      render();
     }
 
     function escapeHtml(s: string) {
@@ -100,45 +161,185 @@ import Base from '../../layouts/Base.astro';
           })[c]
       );
     }
-    function escapeReg(s: string) {
-      return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    }
-    function highlight(snippet: string, q: string) {
-      const esc = escapeHtml(snippet);
-      if (!q) return esc;
-      const re = new RegExp('(' + escapeReg(escapeHtml(q)) + ')', 'ig');
-      return esc.replace(re, '<mark>$1</mark>');
-    }
-    function snippet(body: string, q: string) {
-      const low = body.toLowerCase();
-      const idx = low.indexOf(q.toLowerCase());
+
+    // Snippet quanh match đầu tiên trong nội dung (head ở chế độ nhẹ,
+    // toàn bài khi bật đầy đủ) — fold gần như giữ nguyên độ dài nên
+    // cắt bản gốc tại cùng vị trí của bản đã bỏ dấu.
+    function snippet(p: SearchDoc) {
+      const body = p.body ?? p.head ?? '';
+      const bodyF = p.bodyF ?? p.headF ?? '';
+      let idx = -1;
+      for (const w of tokens) {
+        idx = bodyF.indexOf(w);
+        if (idx >= 0) break;
+      }
       if (idx < 0) return '';
       const start = Math.max(0, idx - 80);
-      const end = Math.min(body.length, idx + q.length + 80);
+      const end = Math.min(body.length, idx + 80 + Math.max(...tokens.map((t) => t.length)));
       return (start > 0 ? '…' : '') + body.slice(start, end) + (end < body.length ? '…' : '');
     }
-    function render(list: IndexItem[], q: string) {
-      if (!list.length) {
-        results.innerHTML = '<p class="search-empty">Không tìm thấy bài viết phù hợp.</p>';
+
+    // ===== Facets: đếm tag/category trên bộ kết quả text-match =====
+    function renderFacets() {
+      if (!textMatched.length || (!activeTags.size && !activeCats.size)) {
+        facetsEl.innerHTML = '';
         return;
       }
-      results.innerHTML = list
-        .map((p) => {
-          const snip = p.body ? snippet(p.body, q) : '';
+      const tagCount = new Map<string, number>();
+      const catCount = new Map<string, number>();
+      for (const { p } of textMatched) {
+        for (const t of p.tags) tagCount.set(t, (tagCount.get(t) ?? 0) + 1);
+        for (const c of p.category) catCount.set(c, (catCount.get(c) ?? 0) + 1);
+      }
+      const chips: string[] = [];
+      const chip = (kind: 'tag' | 'cat', name: string, count: number, active: boolean) =>
+        `<button type="button" class="facet-chip${active ? ' active' : ''}" data-kind="${kind}" data-name="${escapeHtml(
+          name
+        )}">${escapeHtml(name)} <span class="count">${count}</span></button>`;
+      for (const c of activeCats) chips.push(chip('cat', c, catCount.get(c) ?? 0, true));
+      for (const t of activeTags) chips.push(chip('tag', t, tagCount.get(t) ?? 0, true));
+      const topTags = [...tagCount.entries()]
+        .filter(([t]) => !activeTags.has(t))
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+        .slice(0, MAX_CHIPS);
+      for (const [t, n] of topTags) chips.push(chip('tag', t, n, false));
+      facetsEl.innerHTML = chips.join('');
+    }
+
+    function lastPageOf(total: number) {
+      return Math.max(1, Math.ceil(total / PAGE_SIZE));
+    }
+
+    function render() {
+      renderFacets();
+      const matched = textMatched.filter(
+        ({ p }) =>
+          [...activeTags].every((t) => p.tags.includes(t)) &&
+          [...activeCats].every((c) => p.category.includes(c))
+      );
+      const lastPage = lastPageOf(matched.length);
+      page = Math.min(page, lastPage);
+      if (stats) stats.textContent = `${matched.length} kết quả · trang ${page}/${lastPage}`;
+      if (!matched.length) {
+        results.innerHTML = fullToggle?.checked
+          ? '<p class="search-empty">Không tìm thấy bài viết phù hợp.</p>'
+          : '<p class="search-empty">Không tìm thấy bài viết phù hợp. Thử bật <strong>Tìm cả trong nội dung</strong> để tìm sâu hơn.</p>';
+        pagination.innerHTML = '';
+        return;
+      }
+      results.innerHTML = matched
+        .slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+        .map(({ p }) => {
+          const snip = snippet(p);
           const desc = snip || p.description;
           return `<a class="search-item" href="${p.url}">
-            <span class="search-item-title">${escapeHtml(p.title)}</span>
+            <span class="search-item-title">${highlightTokens(escapeHtml(p.title), tokens)}</span>
             <span class="search-item-meta">${new Date(p.date).toLocaleDateString('vi-VN')}${
               p.category.length ? ' · ' + p.category.map(escapeHtml).join(', ') : ''
             }${p.tags.length ? ' · ' + p.tags.map(escapeHtml).join(', ') : ''}</span>
-            ${desc ? `<span class="search-item-desc">${highlight(desc, q)}</span>` : ''}
+            ${desc ? `<span class="search-item-desc">${highlightTokens(escapeHtml(desc), tokens)}</span>` : ''}
           </a>`;
         })
         .join('');
+      renderPagination(lastPage);
     }
 
-    input.oninput = () => run(input.value);
-    run(initial);
+    function renderPagination(lastPage: number) {
+      const btn = (label: string, target: number, cls: string, disabled: boolean) =>
+        disabled
+          ? `<span class="${cls} is-disabled" aria-disabled="true">${label}</span>`
+          : `<button type="button" class="${cls}" data-pg="${target}">${label}</button>`;
+      let html = '<nav class="pagination" aria-label="Phân trang"><div class="pg-pages">';
+      html += btn('Đầu', 1, 'pg-edge', page <= 1);
+      html += btn('← Trước', page - 1, 'pg-prev', page <= 1);
+      for (const it of paginationItems(page, lastPage)) {
+        html +=
+          typeof it === 'number'
+            ? it === page
+              ? `<span class="active">${it}</span>`
+              : `<button type="button" data-pg="${it}">${it}</button>`
+            : `<span class="pg-ellipsis" aria-hidden="true">…</span>`;
+      }
+      html += btn('Sau →', page + 1, 'pg-next', page >= lastPage);
+      html += btn('Cuối', lastPage, 'pg-edge', page >= lastPage);
+      html += '</div><form class="pg-jump">';
+      html += '<label class="pg-jump-label">Trang</label>';
+      html += `<input class="pg-jump-input" type="number" name="p" min="1" max="${lastPage}" value="${page}" aria-label="Nhập số trang" inputmode="numeric" />`;
+      html += `<span class="pg-jump-total">/ ${lastPage}</span>`;
+      html += '<button class="pg-jump-btn" type="submit">Đến</button>';
+      html += '</form></nav>';
+      pagination.innerHTML = html;
+    }
+
+    function goPage(n: number) {
+      const lastPage = lastPageOf(
+        textMatched.filter(
+          ({ p }) =>
+            [...activeTags].every((t) => p.tags.includes(t)) &&
+            [...activeCats].every((c) => p.category.includes(c))
+        ).length
+      );
+      page = Math.min(Math.max(1, Math.round(n)), lastPage);
+      render();
+      results.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    pagination.addEventListener('click', (ev) => {
+      const b = (ev.target as HTMLElement | null)?.closest?.('button[data-pg]');
+      if (!b) return;
+      goPage(Number((b as HTMLElement).dataset.pg));
+    });
+    pagination.addEventListener('submit', (ev) => {
+      const form = (ev.target as HTMLElement | null)?.closest?.(
+        '.pg-jump'
+      ) as HTMLFormElement | null;
+      if (!form) return;
+      ev.preventDefault();
+      const raw = Number(new FormData(form).get('p'));
+      if (Number.isFinite(raw)) goPage(raw);
+    });
+
+    facetsEl.addEventListener('click', (ev) => {
+      const chip = (ev.target as HTMLElement | null)?.closest?.(
+        '.facet-chip'
+      ) as HTMLElement | null;
+      if (!chip) return;
+      const kind = chip.dataset.kind;
+      const name = chip.dataset.name;
+      if (!name) return;
+      const set = kind === 'cat' ? activeCats : activeTags;
+      if (set.has(name)) set.delete(name);
+      else set.add(name);
+      page = 1;
+      writeState();
+      render();
+    });
+
+    fullToggle?.addEventListener('change', () => {
+      if (fullToggle.checked) void ensureFull();
+      page = 1;
+      writeState();
+      void run();
+    });
+
+    let debounce: ReturnType<typeof setTimeout> | undefined;
+    input.addEventListener('input', () => {
+      clearTimeout(debounce);
+      debounce = setTimeout(() => {
+        activeTags.clear();
+        activeCats.clear();
+        writeState();
+        void run();
+      }, 150);
+    });
+
+    window.addEventListener('popstate', () => {
+      readState();
+      void run();
+    });
+
+    readState();
+    void run();
   }
   initSearch();
   if (!(window as any).__searchInit) {

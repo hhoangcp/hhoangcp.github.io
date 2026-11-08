@@ -1,0 +1,225 @@
+// Chủ đề — cấu trúc phân nhánh của blog.
+// Mỗi bài tự khai vị trí của mình trong frontmatter: `tree: [slug-cấp-1, slug-cấp-2, ...]`
+// (thay cho `category` cũ). Trang /category/ dựng cây từ frontmatter lúc build nên
+// bài mới chỉ cần thêm dòng `tree:` là tự động nhảy vào cây — không cần sửa JSON.
+
+// Cấp 1 — thứ tự hiển thị cố định.
+export const TREE_BRANCHES: { slug: string; title: string }[] = [
+  { slug: 'co-ban', title: 'Nền tảng & Kỹ thuật' },
+  { slug: 'cau-truc-du-lieu', title: 'Cấu trúc dữ liệu' },
+  { slug: 'do-thi', title: 'Đồ thị' },
+  { slug: 'quy-hoach-dong', title: 'Quy hoạch động' },
+  { slug: 'xu-ly-xau', title: 'Xử lí xâu' },
+  { slug: 'toan-hoc', title: 'Toán học' },
+  { slug: 'da-thuc', title: 'Đa thức & Đại số' },
+  { slug: 'hinh-hoc', title: 'Hình học' },
+  { slug: 'luyen-de-voi', title: 'Luyện đề VOI' },
+  { slug: 'tai-nguyen', title: 'Tài nguyên' },
+];
+
+// Tiêu đề hiển thị cho node cấp 2+ (slug không dấu, phân tách bằng gạch ngang).
+// Slug chưa có ở đây sẽ được hiển thị theo slug (đã làm sạch gạch ngang).
+export const TREE_NODE_TITLES: Record<string, string> = {
+  'chua-phan-loai': 'Chưa phân loại',
+  // luyen-de-voi
+  'voi-2005': 'VOI 2005',
+  'voi-2017': 'VOI 2017',
+  'voi-2018': 'VOI 2018',
+  'voi-2019': 'VOI 2019',
+  'voi-2020': 'VOI 2020',
+  'voi-2021': 'VOI 2021',
+  'voi-2022': 'VOI 2022',
+  'voi-2023': 'VOI 2023',
+  'voi-2024': 'VOI 2024',
+  'voi-2025': 'VOI 2025',
+  'voi-2026': 'VOI 2026',
+  // cau-truc-du-lieu
+  'cau-truc-co-ban': 'Cấu trúc dữ liệu cơ bản',
+  fenwick: 'Cây Fenwick & ứng dụng',
+  'sqrt-decomposition': 'Sqrt decomposition & duy trì thô',
+  'truy-van-doan-tinh': 'Truy vấn đoạn tĩnh',
+  'segment-tree': 'Segment tree — nền tảng & lazy',
+  'segment-tree-nang-cao': 'Segment tree nâng cao',
+  'segment-tree-beats': 'Segment tree beats & amortized',
+  'cay-can-bang': 'Cây cân bằng & cây động',
+  'cay-khong-gian': 'Cây không gian & trie',
+  // do-thi
+  'duyet-do-thi': 'Duyệt đồ thị & nền tảng',
+  'duong-di-ngan-nhat': 'Đường đi ngắn nhất',
+  dijkstra: 'Dijkstra',
+  'duong-di-ngan-nhat-nang-cao': 'Đường đi ngắn nhất nâng cao',
+  'cay-khung': 'Cây khung & matroid',
+  'lien-thong': 'Liên thông & 2-SAT',
+  'lca-va-binary-lifting': 'LCA & binary lifting',
+  'phan-tach-cay': 'Phân tách cây',
+  'dp-tren-cay': 'DP trên cây',
+  'luong-tren-mang': 'Luồng trên mạng',
+  'cat-cuc-tieu': 'Cắt cực tiểu & ứng dụng',
+  'ghep-cap-hai-phia': 'Ghép cặp hai phía',
+  'ghep-cap-tong-quat': 'Ghép cặp tổng quát & ứng dụng',
+  'to-mau': 'Tô màu đồ thị',
+  // toan-hoc
+  'so-hoc-co-ban': 'Số học cơ bản',
+  'dong-du-va-nghich-dao': 'Đồng dư & nghịch đảo',
+  'so-nguyen-to-va-sang': 'Số nguyên tố & sàng',
+  'can-va-logarit-roi-rac': 'Căn bậc hai & logarit rời rạc',
+  'ham-nhan-tinh-va-dirichlet': 'Hàm nhân tính & Dirichlet',
+  'tong-voi-n-lon': 'Tổng với n lớn',
+  'binomial-va-power-sums': 'Binomial & power sums',
+  'so-lon': 'Số lớn',
+  'lien-phan-so-va-diem-luoi': 'Liên phân số & điểm lưới',
+  'dem-to-hop-co-ban': 'Đếm & tổ hợp cơ bản',
+  'dem-do-thi-va-doi-xung': 'Đếm đồ thị & đối xứng',
+  'dai-so-tuyen-tinh': 'Đại số tuyến tính & quy hoạch',
+  'ly-thuyet-tro-choi': 'Lý thuyết trò chơi',
+  // quy-hoach-dong
+  'dp-co-ban': 'Quy hoạch động cơ bản',
+  'tren-xau': 'DP trên xâu',
+  'interval-dp': 'Interval DP',
+  knapsack: 'Knapsack',
+  'dp-bitmask': 'DP bitmask',
+  'tren-cay': 'DP trên cây',
+  'toi-uu-hoa': 'Tối ưu hoá DP',
+  'broken-profile': 'Broken profile & Plug DP',
+  // xu-ly-xau
+  hashing: 'Hash đa thức',
+  'kmp-z': 'KMP, Z-function & chu kì',
+  palindrome: 'Xâu đối xứng',
+  'suffix-array': 'Suffix Array',
+  'sa-linear': 'Suffix array tuyến tính',
+  'suffix-automaton': 'Suffix automaton & cây hậu tố',
+  aho: 'Aho–Corasick',
+  // co-ban
+  'nen-tang': 'Nền tảng & độ phức tạp',
+  'tuong-tac-va-io': 'Tương tác & I/O',
+  'sap-xep-hai-con-tro': 'Sắp xếp, hai con trỏ & kĩ thuật mảng',
+  'tim-kiem-nhi-phan': 'Tìm kiếm nhị phân',
+  'phuong-phap-so': 'Phương pháp số & tối ưu',
+  'tham-lam': 'Tham lam & constructive',
+  'de-quy-va-chia-de-tri': 'Đệ quy & chia để trị',
+  'quay-lui': 'Quay lui & nhánh cận',
+  bitmask: 'Thao tác bit & bitmask',
+  'offline-va-sqrt': 'Kĩ thuật offline & sqrt',
+  // da-thuc
+  'tich-chap': 'FFT, NTT & tích chập',
+  fps: 'Formal power series & hồi quy tuyến tính',
+  'da-diem': 'Đa điểm & nội suy',
+  // hinh-hoc
+  'nen-tang-hinh-hoc': 'Nền tảng hình học',
+  'quet-duong-thang': 'Quét đường thẳng & sự kiện',
+  'bao-loi': 'Bao lồi & tối ưu lồi',
+  'khoang-cach': 'Khoảng cách & MST hình học',
+  'diem-nguyen': 'Điểm nguyên & định lí Pick',
+  'do-thi-phang': 'Đồ thị phẳng & đối ngẫu',
+};
+
+// Tiêu đề theo đường dẫn đầy đủ "<nhánh>/<node>" — dùng khi các nhánh dùng
+// trùng slug node (ví dụ node "khác" ở nhiều nhánh có tên khác nhau).
+export const TREE_PATH_TITLES: Record<string, string> = {
+  'xu-ly-xau/khac': 'Kỹ thuật khác',
+  'co-ban/khac': 'Bài toán & kĩ thuật khác',
+};
+
+// Thứ tự hiển thị con của từng nhánh (theo trình tự học); node không có
+// trong danh sách đứng sau, xếp theo alphabet.
+export const TREE_NODE_ORDER: Record<string, string[]> = {
+  'cau-truc-du-lieu': [
+    'cau-truc-co-ban',
+    'fenwick',
+    'sqrt-decomposition',
+    'truy-van-doan-tinh',
+    'segment-tree',
+    'segment-tree-nang-cao',
+    'segment-tree-beats',
+    'cay-can-bang',
+    'cay-khong-gian',
+  ],
+  'do-thi': [
+    'duyet-do-thi',
+    'duong-di-ngan-nhat',
+    'duong-di-ngan-nhat-nang-cao',
+    'cay-khung',
+    'lien-thong',
+    'lca-va-binary-lifting',
+    'phan-tach-cay',
+    'dp-tren-cay',
+    'luong-tren-mang',
+    'cat-cuc-tieu',
+    'ghep-cap-hai-phia',
+    'ghep-cap-tong-quat',
+    'to-mau',
+  ],
+  'luyen-de-voi': [
+    'voi-2005',
+    'voi-2017',
+    'voi-2018',
+    'voi-2019',
+    'voi-2020',
+    'voi-2021',
+    'voi-2022',
+    'voi-2023',
+    'voi-2024',
+    'voi-2025',
+    'voi-2026',
+  ],
+  'quy-hoach-dong': [
+    'dp-co-ban',
+    'tren-xau',
+    'interval-dp',
+    'knapsack',
+    'dp-bitmask',
+    'tren-cay',
+    'toi-uu-hoa',
+  ],
+  'xu-ly-xau': [
+    'hashing',
+    'kmp-z',
+    'palindrome',
+    'suffix-array',
+    'suffix-automaton',
+    'aho',
+    'khac',
+  ],
+  'co-ban': [
+    'nen-tang',
+    'tuong-tac-va-io',
+    'sap-xep-hai-con-tro',
+    'tim-kiem-nhi-phan',
+    'phuong-phap-so',
+    'tham-lam',
+    'de-quy-va-chia-de-tri',
+    'quay-lui',
+    'bitmask',
+    'offline-va-sqrt',
+  ],
+  'da-thuc': ['tich-chap', 'fps', 'da-diem'],
+  'hinh-hoc': [
+    'nen-tang-hinh-hoc',
+    'quet-duong-thang',
+    'bao-loi',
+    'khoang-cach',
+    'diem-nguyen',
+    'do-thi-phang',
+  ],
+  'toan-hoc': [
+    'so-hoc-co-ban',
+    'dong-du-va-nghich-dao',
+    'so-nguyen-to-va-sang',
+    'can-va-logarit-roi-rac',
+    'ham-nhan-tinh-va-dirichlet',
+    'tong-voi-n-lon',
+    'binomial-va-power-sums',
+    'so-lon',
+    'lien-phan-so-va-diem-luoi',
+    'dem-to-hop-co-ban',
+    'dem-do-thi-va-doi-xung',
+    'dai-so-tuyen-tinh',
+    'ly-thuyet-tro-choi',
+  ],
+};
+
+// Node "mồ côi": bài chưa khai `tree:` — hiển thị cuối cây để dễ nhận ra và gán sau.
+export const TREE_UNASSIGNED = {
+  slug: 'chua-phan-loai',
+  title: 'Chưa phân loại',
+};

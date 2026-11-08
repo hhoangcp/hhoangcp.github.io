@@ -3,8 +3,10 @@ title: Repo lời giải CSES Problem Set — 400 bài kèm write-up tiếng Vi�
 date: 2026-10-22 12:05:00
 description: Giới thiệu CSES Problem Set và repo lời giải 400 bài — code C++/Python, write-up song ngữ Anh–Việt, tổ chức theo đúng 18 chuyên mục của CSES.
 tags: [cses, competitive-programming, cpp]
-category: [Tài nguyên]
+tree: [tai-nguyen]
 ---
+
+_Điểm bắt đầu hợp lí nhất cho bộ write-up là [A + B](/posts/a-plus-b/); bản đồ toàn bộ bài viết nằm ở [Chủ đề](/category/)._
 
 ## CSES Problem Set là gì
 

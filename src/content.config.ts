@@ -12,7 +12,7 @@ const posts = defineCollection({
     draft: z.boolean().default(false),
     source: z.string().optional(),
     sourceUrl: z.string().url().optional(),
-    category: z.array(z.string()).default([]),
+    tree: z.array(z.string()).default([]),
   }),
 });
 
